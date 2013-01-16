@@ -79,6 +79,6 @@ userInfoUri - The REST URI in the OAuth Provider's system, that will be called t
 
 4.  Define your authentication-manager.
 
-5.  Define the Authentication Entry Point and declare it in the <http entry-point-ref>.
+5.  Define the Authentication Entry Point and declare it in the entry-point-ref.
 
 6.  Define the OAuth2AuthenticationFilter to pick up the redirect from the OAuth Provider and hook it in as a custom-filter.
