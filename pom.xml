@@ -4,7 +4,7 @@
     <groupId>com.racquettrack</groupId>
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
