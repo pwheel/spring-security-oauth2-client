@@ -1,0 +1,15 @@
+*~
+.classpath
+.project
+target
+.settings
+.DS_Store
+.faces-config.xml.jsfdia
+MANIFEST.MF
+.idea
+*.iml
+*.log
+atlassian-ide-plugin.xml
+racquettrack-web/src/main/webapp/WEB-INF/classes/
+racquettrack-web/src/main/webapp/WEB-INF/lib/
+racquettrack-model/racquettrack*.log*
