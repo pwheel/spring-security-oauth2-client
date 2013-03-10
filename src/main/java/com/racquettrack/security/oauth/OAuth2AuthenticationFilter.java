@@ -113,9 +113,10 @@ public class OAuth2AuthenticationFilter extends AbstractAuthenticationProcessing
         // There should only be one entry in the array, if there are more they will be ignored.
         if (receivedStates == null || receivedStates.length == 0 ||
                 !receivedStates[0].equals(originalState)) {
-            LOG.debug("Received states {} was not equal to original state {}", receivedStates, originalState);
-            throw new AuthenticationServiceException("Received states=" + receivedStates + " was not equal to " +
-                    "original state=" + originalState);
+            String errorMsg = String.format("Received states %s was not equal to original state %s",
+                    receivedStates, originalState);
+            LOG.error(errorMsg);
+            throw new AuthenticationServiceException(errorMsg);
         }
     }
 
