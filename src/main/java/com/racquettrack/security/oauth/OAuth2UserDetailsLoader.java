@@ -9,18 +9,19 @@ import java.util.UUID;
  * Interface that allows for retrieving a {@link UserDetails} object from the internal system and for creating
  * the representation of the user in the internal system if it doesn't exist.
  *
+ * @param <T> The concrete type that implements {@link UserDetails}.
  * @see OAuth2UserDetailsService
  *
  * @author paul.wheeler
  */
-public interface OAuth2UserDetailsLoader {
+public interface OAuth2UserDetailsLoader<T extends UserDetails> {
 
     /**
      * Retrieves the {@link UserDetails} object.
      * @param uuid The {@link UUID} of the user in the OAuth Provider's system.
      * @return The {@link UserDetails} of the user if it exists, or null if it doesn't.
      */
-    public UserDetails getUserByUserId(UUID uuid);
+    public T getUserByUserId(UUID uuid);
 
     /**
      * Expected to be called only when the user described by {@param userInfo} has already been determined to not
