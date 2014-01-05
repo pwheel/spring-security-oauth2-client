@@ -38,7 +38,14 @@ public interface OAuth2UserDetailsLoader<T extends UserDetails> {
      * establish a link between the OAuth Provider and the internal system.
      * @param id The id of the user given by the OAuth Provider.
      * @param userInfo The user info object returned from the OAuth Provider.
-     * @return
+     * @return The created {@link UserDetails} object.
      */
     public UserDetails createUser(UUID id, Map<String, Object> userInfo);
+
+    /**
+     * Update the user with the information from the external system.
+     * @param userDetails The {@link org.springframework.security.core.userdetails.UserDetails} object.
+     * @param userInfo The user info object returned from the OAuth Provider.
+     */
+    public UserDetails updateUser(UserDetails userDetails, Map<String, Object> userInfo);
 }

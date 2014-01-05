@@ -25,7 +25,7 @@ import java.util.UUID;
  */
 public class OAuth2UserDetailsService<OAuth2AuthenticationToken> implements
         AuthenticationUserDetailsService, InitializingBean {
-    private static final Logger LOG = LoggerFactory.getLogger(OAuth2UserDetailsService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2UserDetailsService.class);
 
     protected OAuth2ServiceProperties oAuth2ServiceProperties = null;
     protected OAuth2UserDetailsLoader oAuth2UserDetailsLoader = null;
@@ -49,7 +49,7 @@ public class OAuth2UserDetailsService<OAuth2AuthenticationToken> implements
      */
     @Override
     public UserDetails loadUserDetails(Authentication token) throws UsernameNotFoundException {
-        LOG.debug("loadUserDetails called with: " + token);
+        LOGGER.debug("loadUserDetails called with: " + token);
         Map<String, Object> userInfo = getUserInfoFromProvider(token);
         if (userInfo == null) {
             throw new UsernameNotFoundException("Failed to retrieve user information from OAuth Provider using token:"
@@ -62,10 +62,12 @@ public class OAuth2UserDetailsService<OAuth2AuthenticationToken> implements
 
         // If we didn't find the user account, check to see if an account can be created
         if (userDetails == null && oAuth2UserDetailsLoader.isCreatable(userInfo)) {
-            LOG.debug("Okay to create new user {}", userId);
+            LOGGER.debug("Okay to create new user {}", userId);
             userDetails = oAuth2UserDetailsLoader.createUser(userId, userInfo);
-            LOG.info("Created new user: {}", userDetails);
+            LOGGER.info("Created new user: {}", userDetails);
             userDetails = postCreateUser(userDetails, userInfo);
+        } else if (userDetails != null) {
+            userDetails = oAuth2UserDetailsLoader.updateUser(userDetails, userInfo);
         }
         if (userDetails == null) {
             throw new UsernameNotFoundException("Failed to find userId: " + userId + ", from token: " + token);
@@ -135,18 +137,18 @@ public class OAuth2UserDetailsService<OAuth2AuthenticationToken> implements
                     .get(ClientResponse.class);
 
             String output = clientResponse.getEntity(String.class);
-            LOG.debug("Output is {}", output);
+            LOGGER.debug("Output is {}", output);
 
             if (clientResponse.getStatus() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 userInfo = mapper.readValue(output, Map.class);
                 //username = (String)userData.get("username");
             } else {
-                LOG.error("Got error response (code={}) from Provider: {}", clientResponse.getStatus(), output);
+                LOGGER.error("Got error response (code={}) from Provider: {}", clientResponse.getStatus(), output);
             }
 
         } catch (UniformInterfaceException | ClientHandlerException | IOException e) {
-            LOG.error("Error getting user info from Provider", e);
+            LOGGER.error("Error getting user info from Provider", e);
         }
 
         return userInfo;

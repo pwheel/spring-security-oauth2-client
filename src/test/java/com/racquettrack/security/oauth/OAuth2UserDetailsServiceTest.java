@@ -61,7 +61,7 @@ public class OAuth2UserDetailsServiceTest extends AbstractOAuth2Test {
 //        user.setEmail("paul.wheeler@racquettrack.com");
 //        user.setPassword("password1");
 
-        Mockito.when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
+        when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
     }
 
     /**
@@ -73,8 +73,8 @@ public class OAuth2UserDetailsServiceTest extends AbstractOAuth2Test {
         // Update the created date time
         userInfoResponse.put("created", Calendar.getInstance().getTimeInMillis());
         String response = mapper.writeValueAsString(userInfoResponse);
-        Mockito.when(clientResponse.getEntity(String.class)).thenReturn(response);
-        Mockito.when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
+        when(clientResponse.getEntity(String.class)).thenReturn(response);
+        when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
     }
 
     /**
@@ -97,18 +97,22 @@ public class OAuth2UserDetailsServiceTest extends AbstractOAuth2Test {
 
     @Test
     public void testLoadUserDetails() {
-        Mockito.when(oAuth2UserDetailsLoader.getUserByUserId(userId)).thenReturn(user);
+        // given
+        when(oAuth2UserDetailsLoader.getUserByUserId(userId)).thenReturn(user);
+        when(oAuth2UserDetailsLoader.updateUser(eq(user),anyMap())).thenReturn(user);
 
+        // when
         UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
 
+        // then
         Mockito.verify(oAuth2UserDetailsLoader, Mockito.never()).createUser(any(UUID.class), any(Map.class));
         Assert.assertEquals(user, ud);
     }
 
     @Test (expected = UsernameNotFoundException.class)
     public void testLoadUserDetailsErrorResponseFromProvider() {
-        Mockito.when(clientResponse.getEntity(String.class)).thenReturn(MOCK_USER_INFO_ERROR_RESPONSE);
-        Mockito.when(clientResponse.getStatus()).thenReturn(400);
+        when(clientResponse.getEntity(String.class)).thenReturn(MOCK_USER_INFO_ERROR_RESPONSE);
+        when(clientResponse.getStatus()).thenReturn(400);
 
         oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
     }
