@@ -4,7 +4,11 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.mockito.Matchers;
-import org.mockito.Mockito;
+
+import javax.ws.rs.core.MediaType;
+
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 /**
  * Helper class for initialising mocks for OAuth testing.
@@ -13,10 +17,10 @@ import org.mockito.Mockito;
  */
 public class AbstractOAuth2Test {
 
-    protected Client client = Mockito.mock(Client.class);
-    protected WebResource webResource = Mockito.mock(WebResource.class);
-    protected ClientResponse clientResponse = Mockito.mock(ClientResponse.class);
-    protected WebResource.Builder builder = Mockito.mock(WebResource.Builder.class);
+    protected Client client = mock(Client.class);
+    protected WebResource webResource = mock(WebResource.class);
+    protected ClientResponse clientResponse = mock(ClientResponse.class);
+    protected WebResource.Builder builder = mock(WebResource.Builder.class);
 
     /**
      * Initialise all the mocks necessary for mocking calls to the OAuth Provider.
@@ -28,12 +32,13 @@ public class AbstractOAuth2Test {
      * @param defaultResponse The defaultResponse data that will be returned by the call to {@link ClientResponse#getEntity(Class)}.
      */
     protected void initMocks(String resourceUri, String defaultResponse) {
-        Mockito.when(client.resource(resourceUri)).thenReturn(webResource);
-        Mockito.when(webResource.queryParam(Matchers.anyString(), Matchers.anyString())).thenReturn(webResource);
-        Mockito.when(webResource.accept("application/json")).thenReturn(builder);
-        Mockito.when(builder.get(ClientResponse.class)).thenReturn(clientResponse);
-        Mockito.when(clientResponse.getStatus()).thenReturn(200);
+        given(client.resource(resourceUri)).willReturn(webResource);
+        given(webResource.queryParam(Matchers.anyString(), Matchers.anyString())).willReturn(webResource);
+        given(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).willReturn(builder);
+        given(builder.get(ClientResponse.class)).willReturn(clientResponse);
+        given(clientResponse.getStatus()).willReturn(200);
+        given(clientResponse.getClientResponseStatus()).willReturn(ClientResponse.Status.OK);
 
-        Mockito.when(clientResponse.getEntity(String.class)).thenReturn(defaultResponse);
+        given(clientResponse.getEntity(String.class)).willReturn(defaultResponse);
     }
 }

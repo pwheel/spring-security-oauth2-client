@@ -37,8 +37,8 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
         request.getSession().setAttribute(oAuth2ServiceProperties.getStateParamName(), state);
 
         // Build the authorisation uri
-        StringBuilder authorisationUri = new StringBuilder();
-        authorisationUri.append(oAuth2ServiceProperties.getUserAuthorisationUri())
+        StringBuilder authorisationUri = new StringBuilder()
+                .append(oAuth2ServiceProperties.getUserAuthorisationUri())
                 .append("?")
                 .append(oAuth2ServiceProperties.getClientIdParamName())
                 .append("=")
@@ -81,7 +81,7 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
         StringBuilder result = new StringBuilder();
 
         if (additionalParameters != null &&
-                additionalParameters.isEmpty() == false) {
+                !additionalParameters.isEmpty()) {
             for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
                 result.append("&")
                         .append(entry.getKey())
@@ -108,7 +108,7 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
         Assert.notNull(oAuth2ServiceProperties, "oAuth2ServiceProperties must be set");
     }
 
-    public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
+    public void setOAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
         this.oAuth2ServiceProperties = oAuth2ServiceProperties;
     }
 }

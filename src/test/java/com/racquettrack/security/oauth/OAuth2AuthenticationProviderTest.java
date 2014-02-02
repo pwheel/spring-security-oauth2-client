@@ -1,17 +1,20 @@
 package com.racquettrack.security.oauth;
 
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link OAuth2AuthenticationProvider}.
@@ -34,7 +37,7 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
 
     // Mocks
     private AuthenticationUserDetailsService<OAuth2AuthenticationToken> authenticatedUserDetailsService =
-            Mockito.mock(AuthenticationUserDetailsService.class);
+            mock(AuthenticationUserDetailsService.class);
 
     @Before
     public void setup() {
@@ -47,28 +50,51 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
         oAuth2ServiceProperties.setAccessTokenUri(MOCK_ACCESS_URI);
 
         // By default mock everything to okay
-        when(userDetails.isAccountNonExpired()).thenReturn(true);
-        when(userDetails.isAccountNonLocked()).thenReturn(true);
-        when(userDetails.isCredentialsNonExpired()).thenReturn(true);
-        when(userDetails.isEnabled()).thenReturn(true);
-        Mockito.when(authenticatedUserDetailsService.loadUserDetails(expectedTmpToken)).thenReturn(userDetails);
+        given(userDetails.isAccountNonExpired()).willReturn(true);
+        given(userDetails.isAccountNonLocked()).willReturn(true);
+        given(userDetails.isCredentialsNonExpired()).willReturn(true);
+        given(userDetails.isEnabled()).willReturn(true);
+        given(authenticatedUserDetailsService.loadUserDetails(expectedTmpToken)).willReturn(userDetails);
     }
 
     @Test
-    public void testAuthenticate() {
-        Authentication authentication = oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
-
+    public void shouldAuthenticate() {
+        // given
         OAuth2AuthenticationToken expectedResult =
                 new OAuth2AuthenticationToken(userDetails, MOCK_ACCESS_TOKEN, userDetails.getAuthorities());
 
-        Assert.assertNotNull(authentication);
-        Assert.assertEquals(expectedResult, authentication);
+        // when
+        Authentication authentication = oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
+
+        // then
+        assertThat(authentication, notNullValue());
+        assertThat((OAuth2AuthenticationToken)authentication, is(expectedResult));
     }
 
     @Test(expected = AuthenticationException.class)
-    public void testAuthenticateFailure() {
-        Mockito.when(clientResponse.getEntity(String.class)).thenReturn(MOCK_ACCESS_RESPONSE_FAILURE);
+    public void shouldThrowAuthenticationExceptionWhenAuthorizationCodeIsInvalid() {
+        // given
+        given(clientResponse.getEntity(String.class)).willReturn(MOCK_ACCESS_RESPONSE_FAILURE);
 
+        // when
+        oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldThrowAuthenticationExceptionWhenJerseyThrowsARuntimeError() {
+        // given
+        given(builder.get(ClientResponse.class)).willThrow(ClientHandlerException.class);
+
+        // when
+        oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldThrowAuthenticationExceptionWhenMappingFails() {
+        // given
+        given(clientResponse.getEntity(String.class)).willReturn("bob bob bob");
+
+        // when
         oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
     }
 }

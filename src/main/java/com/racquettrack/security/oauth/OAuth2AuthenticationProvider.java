@@ -2,6 +2,7 @@ package com.racquettrack.security.oauth;
 
 import com.sun.jersey.api.client.*;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -16,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.util.Assert;
 
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Map;
 
@@ -38,7 +40,9 @@ import java.util.Map;
  * @author paul.wheeler
  */
 public class OAuth2AuthenticationProvider implements AuthenticationProvider, InitializingBean {
-    private static final Logger LOG = LoggerFactory.getLogger(OAuth2AuthenticationProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2AuthenticationProvider.class);
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private AuthenticationUserDetailsService<OAuth2AuthenticationToken> authenticatedUserDetailsService = null;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
@@ -72,10 +76,10 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
             return null;
         }
 
-        LOG.debug("OAuth2Authentication authentication request: " + authentication);
+        LOGGER.debug("OAuth2Authentication authentication request: " + authentication);
 
         if (authentication.getCredentials() == null) {
-            LOG.debug("No credentials found in request.");
+            LOGGER.debug("No credentials found in request.");
 
             if (throwExceptionWhenTokenRejected) {
                 throw new BadCredentialsException("No pre-authenticated credentials found in request.");
@@ -113,7 +117,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
     /**
      * Set the AuthenticatedUserDetailsService to be used to load the {@code UserDetails} for the authenticated user.
      *
-     * @param uds
+     * @param uds The {@link AuthenticationUserDetailsService} to use.
      */
     public void setAuthenticatedUserDetailsService(AuthenticationUserDetailsService<OAuth2AuthenticationToken> uds) {
         this.authenticatedUserDetailsService = uds;
@@ -131,7 +135,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
     /**
      * Sets the strategy which will be used to validate the loaded <tt>UserDetails</tt> object
      * for the user. Defaults to an {@link org.springframework.security.authentication.AccountStatusUserDetailsChecker}.
-     * @param userDetailsChecker
+     * @param userDetailsChecker The {@link UserDetailsChecker} to use.
      */
     public void setUserDetailsChecker(UserDetailsChecker userDetailsChecker) {
         Assert.notNull(userDetailsChecker, "userDetailsChacker cannot be null");
@@ -148,39 +152,68 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         String accessToken = null;
 
         try {
-            Client client = getClient();
+            ClientResponse clientResponse = getClientResponseForAccessTokenRequestFrom(authentication);
 
-            WebResource webResource = client
-                    .resource(oAuth2ServiceProperties.getAccessTokenUri())
-                    .queryParam(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType())
-                    .queryParam(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret())
-                    .queryParam(oAuth2ServiceProperties.getCodeParamName(), (String) authentication.getCredentials());
-
-            ClientResponse clientResponse = webResource.accept("application/json")
-                    .get(ClientResponse.class);
-
-            if (clientResponse.getStatus() != 200) {
+            if (!isOkay(clientResponse)) {
                 throw new AuthenticationServiceException("Got HTTP error code from OAuth2 provider: "
                         + clientResponse.getStatus());
             }
 
-            String output = clientResponse.getEntity(String.class);
-            LOG.debug("Output is {}", output);
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String,Object> userData = mapper.readValue(output, Map.class);
+            String output = getStringRepresentationFrom(clientResponse);
+            LOGGER.debug("Output is {}", output);
+
+            Map<String,Object> userData = getUserDataMapFrom(output);
             // Check to see if there was an error or not
             if (userData.containsKey("error")) {
-                LOG.error("Got error response from the OAuth Provider: {}", output);
+                LOGGER.error("Got error response from the OAuth Provider: {}", output);
                 throw new AuthenticationServiceException("Credentials were rejected by the OAuth Provider: " + output);
             }
+
             accessToken = (String)userData.get(oAuth2ServiceProperties.getAccessTokenName());
 
-        } catch (UniformInterfaceException | ClientHandlerException | IOException e) {
-            LOG.error("Error occurred exchanging code for token", e);
-            throw new AuthenticationServiceException("Error occurred exchanging code for token", e);
+        } catch (UniformInterfaceException | ClientHandlerException e) {
+            LOGGER.error("Error thrown by Jersey client when exchanging code for token", e);
+            throw new AuthenticationServiceException("Error thrown by Jersey client when exchanging code for token", e);
         }
 
         return accessToken;
+    }
+
+    private ClientResponse getClientResponseForAccessTokenRequestFrom(Authentication authentication) {
+        Client client = getClient();
+
+        WebResource webResource = client
+                .resource(oAuth2ServiceProperties.getAccessTokenUri())
+                .queryParam(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType())
+                .queryParam(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret())
+                .queryParam(oAuth2ServiceProperties.getCodeParamName(), (String) authentication.getCredentials());
+
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON_TYPE)
+                .get(ClientResponse.class);
+
+        return clientResponse;
+    }
+
+    private boolean isOkay(ClientResponse clientResponse) {
+        return clientResponse != null && clientResponse.getClientResponseStatus() == ClientResponse.Status.OK;
+    }
+
+    private String getStringRepresentationFrom(ClientResponse clientResponse) {
+        return clientResponse.getEntity(String.class);
+    }
+
+    private Map<String, Object> getUserDataMapFrom(String string) throws AuthenticationServiceException {
+        Map<String, Object> userInfo;
+
+        try {
+            TypeReference typeReference = new TypeReference<Map<String,Object>>(){};
+            userInfo = OBJECT_MAPPER.readValue(string, typeReference);
+        } catch (IOException e) {
+            LOGGER.error("Error getting user data from Provider", e);
+            throw new AuthenticationServiceException("Error getting user data from Provider", e);
+        }
+
+        return userInfo;
     }
 
     public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {

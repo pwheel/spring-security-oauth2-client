@@ -1,10 +1,9 @@
 package com.racquettrack.security.oauth;
 
-import junit.framework.Assert;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
@@ -13,6 +12,9 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 /**
@@ -20,8 +22,7 @@ import static org.mockito.Mockito.*;
  *
  * @author paul.wheeler
  */
-public class OAuth2UserDetailsServiceTest extends AbstractOAuth2Test {
-    private static final String MOCK_USER_INFO_URI = "https://mock.com/oauth/user.me";
+public class OAuth2UserDetailsServiceTest {
     private static final String MOCK_USER_INFO_RESPONSE = "{\"identities\":{}," +
             "\"display\":\"paul.wheeler@racquettrack.com\"," +
             "\"emails\":{},\"id\":\"f11cb2a8-f179-4f79-b58a-e378fc2ec1d4\"," +
@@ -30,90 +31,93 @@ public class OAuth2UserDetailsServiceTest extends AbstractOAuth2Test {
             "\"last_logged_in\":1357670015489,\"verified\":false,\"guest\":false,\"attributes\":{}," +
             "\"access_tokens\":{\"dailycred\":\"2c53d030-0f34-471c-92a4-75ee0673f76c\"}," +
             "\"access_token\":\"2c53d030-0f34-471c-92a4-75ee0673f76c\"}";
-    private static final String MOCK_USER_INFO_ERROR_RESPONSE = "{\"error\": " +
-            "{\"message\": \"Invalid OAuth access token.\",\"code\": 190,\"type\": \"OAuthException\"}," +
-            "\"worked\": false}";
     private final String MOCK_ACCESS_TOKEN = "2c53d030-0f34-471c-92a4-75ee0673f76c";
     private final String MOCK_USER_UUID = "f11cb2a8-f179-4f79-b58a-e378fc2ec1d4";
 
     private OAuth2UserDetailsService oAuth2UserDetailsService = new OAuth2UserDetailsService();
     private OAuth2ServiceProperties oAuth2ServiceProperties = new OAuth2ServiceProperties();
     private OAuth2AuthenticationToken oAuth2AuthenticationToken = new OAuth2AuthenticationToken(MOCK_ACCESS_TOKEN);
-    private UserDetails user = mock(UserDetails.class);
     private UUID userId = UUID.fromString(MOCK_USER_UUID);
     private Map<String, Object> userInfoResponse;
 
     // Mocks
-    private OAuth2UserDetailsLoader oAuth2UserDetailsLoader = Mockito.mock(OAuth2UserDetailsLoader.class);
+    private OAuth2UserDetailsLoader oAuth2UserDetailsLoader = mock(OAuth2UserDetailsLoader.class);
+    private UserDetails user = mock(UserDetails.class);
+    private OAuth2UserInfoProvider oAuth2UserInfoProvider = mock(OAuth2UserInfoProvider.class);
 
     @Before
     public void setup() throws IOException {
-        initMocks(MOCK_USER_INFO_URI, MOCK_USER_INFO_RESPONSE);
-        oAuth2ServiceProperties.setUserInfoUri(MOCK_USER_INFO_URI);
 
-        oAuth2UserDetailsService.setoAuth2ServiceProperties(oAuth2ServiceProperties);
-        oAuth2UserDetailsService.setoAuth2UserDetailsLoader(oAuth2UserDetailsLoader);
-        oAuth2UserDetailsService.setClient(client);
+        oAuth2UserDetailsService.setOAuth2ServiceProperties(oAuth2ServiceProperties);
+        oAuth2UserDetailsService.setOAuth2UserDetailsLoader(oAuth2UserDetailsLoader);
+        oAuth2UserDetailsService.setOAuth2UserInfoProvider(oAuth2UserInfoProvider);
 
+        userInfoResponse = getUserInfoResponse();
+
+        given(oAuth2UserInfoProvider.getUserInfoFromProvider(oAuth2AuthenticationToken)).willReturn(userInfoResponse);
+        given(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).willReturn(user);
+    }
+
+    private Map<String, Object> getUserInfoResponse() throws IOException {
+        Map<String, Object> userInfoResponse;
         ObjectMapper mapper = new ObjectMapper();
-        userInfoResponse = mapper.readValue(MOCK_USER_INFO_RESPONSE, Map.class);
-
-//        user.setEmail("paul.wheeler@racquettrack.com");
-//        user.setPassword("password1");
-
-        when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
+        TypeReference typeReference = new TypeReference<Map<String,Object>>(){};
+        userInfoResponse = mapper.readValue(MOCK_USER_INFO_RESPONSE, typeReference);
+        userInfoResponse = updateCreatedTimeOn(userInfoResponse);
+        return userInfoResponse;
     }
 
     /**
      * Update the "created" time in the response object so that new user created can be tested.
-     * @throws IOException
      */
-    public void updateCreatedTime() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+    private Map<String, Object> updateCreatedTimeOn(Map<String, Object> userInfoResponse) {
         // Update the created date time
         userInfoResponse.put("created", Calendar.getInstance().getTimeInMillis());
-        String response = mapper.writeValueAsString(userInfoResponse);
-        when(clientResponse.getEntity(String.class)).thenReturn(response);
-        when(oAuth2UserDetailsLoader.createUser(userId, userInfoResponse)).thenReturn(user);
+        return userInfoResponse;
     }
 
     /**
      * This will fail as the user doesn't exist and the created timestamp is too old
      */
     @Test(expected = UsernameNotFoundException.class)
-    public void testLoadUserDetailsNotCreatable() {
+    public void shouldFailWithUsernameNotFoundWhenUserDetailsIsNotCreatable() {
         oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
     }
 
     @Test
-    public void testLoadUserDetailsNewUser() throws IOException {
-        updateCreatedTime();
-        when(oAuth2UserDetailsLoader.isCreatable(any(Map.class))).thenReturn(true);
-
-        UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
-        Assert.assertEquals(user, ud);
-        Mockito.verify(oAuth2UserDetailsLoader).createUser(userId, userInfoResponse);
-    }
-
-    @Test
-    public void testLoadUserDetails() {
+    public void shouldLoadUserDetailsWhenNewUser() throws IOException {
         // given
-        when(oAuth2UserDetailsLoader.getUserByUserId(userId)).thenReturn(user);
-        when(oAuth2UserDetailsLoader.updateUser(eq(user),anyMap())).thenReturn(user);
+        given(oAuth2UserDetailsLoader.isCreatable(anyMapOf(String.class, Object.class))).willReturn(true);
 
         // when
         UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
 
         // then
-        Mockito.verify(oAuth2UserDetailsLoader, Mockito.never()).createUser(any(UUID.class), any(Map.class));
-        Assert.assertEquals(user, ud);
+        assertThat(user, is(ud));
+        verify(oAuth2UserDetailsLoader).createUser(userId, userInfoResponse);
+    }
+
+    @Test
+    public void shouldLoadUserDetailsWhenExistingUser() {
+        // given
+        given(oAuth2UserDetailsLoader.getUserByUserId(userId)).willReturn(user);
+        given(oAuth2UserDetailsLoader.updateUser(eq(user), anyMapOf(String.class, Object.class))).willReturn(user);
+
+        // when
+        UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
+
+        // then
+        verify(oAuth2UserDetailsLoader, never()).createUser(any(UUID.class), anyMapOf(String.class, Object.class));
+        verify(oAuth2UserDetailsLoader).updateUser(ud, userInfoResponse);
+        assertThat(user, is(ud));
     }
 
     @Test (expected = UsernameNotFoundException.class)
-    public void testLoadUserDetailsErrorResponseFromProvider() {
-        when(clientResponse.getEntity(String.class)).thenReturn(MOCK_USER_INFO_ERROR_RESPONSE);
-        when(clientResponse.getStatus()).thenReturn(400);
+    public void shouldThrowUsernameNotFoundWhenOAuthUserInfoProviderFails() {
+        // given
+        given(oAuth2UserInfoProvider.getUserInfoFromProvider(oAuth2AuthenticationToken)).willReturn(null);
 
+        // when
         oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
     }
 }

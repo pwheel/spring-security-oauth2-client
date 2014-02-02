@@ -2,8 +2,6 @@ package com.racquettrack.security.oauth;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +11,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.endsWith;
+import static org.mockito.Matchers.startsWith;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Test for {@link OAuth2AuthenticationEntryPoint}.
@@ -25,9 +29,9 @@ public class OAuth2AuthenticationEntryPointTest {
     private static final String MOCK_REDIRECT_URI = "http://localhost:8080/oauth/callback";
     private static final String MOCK_CLIENT_ID = UUID.randomUUID().toString();
     private OAuth2ServiceProperties oAuth2ServiceProperties = new OAuth2ServiceProperties();
-    private HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
-    private HttpServletResponse httpServletResponse = Mockito.mock(HttpServletResponse.class);
-    private HttpSession httpSession = Mockito.mock(HttpSession.class);
+    private HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
+    private HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
+    private HttpSession httpSession = mock(HttpSession.class);
     private OAuth2AuthenticationEntryPoint oAuth2AuthenticationEntryPoint = new OAuth2AuthenticationEntryPoint();
 
     @Before
@@ -36,36 +40,42 @@ public class OAuth2AuthenticationEntryPointTest {
         oAuth2ServiceProperties.setClientId(MOCK_CLIENT_ID);
         oAuth2ServiceProperties.setRedirectUri(MOCK_REDIRECT_URI);
 
-        Mockito.when(httpServletRequest.getSession()).thenReturn(httpSession);
+        given(httpServletRequest.getSession()).willReturn(httpSession);
 
-        oAuth2AuthenticationEntryPoint.setoAuth2ServiceProperties(oAuth2ServiceProperties);
+        oAuth2AuthenticationEntryPoint.setOAuth2ServiceProperties(oAuth2ServiceProperties);
     }
 
     @Test
-    public void testEntryPoint() throws IOException, ServletException {
+    public void shouldSendRedirectWhenEntryPointIsHit() throws IOException, ServletException {
+        // given
 
+        // when
         oAuth2AuthenticationEntryPoint.commence(httpServletRequest, httpServletResponse, null);
 
-        Mockito.verify(httpServletResponse).sendRedirect(Matchers.startsWith(generateExpectedURIStart()));
+        // then
+        verify(httpServletResponse).sendRedirect(startsWith(generateExpectedURIStart()));
     }
 
     @Test
-    public void testEntryPointWithAdditionalParams() throws IOException, ServletException {
+    public void shouldRedirectWithAdditionalParams() throws IOException, ServletException {
+        // given
         Map<String, String> params = new HashMap<>();
         params.put("fake_key_1", "FOO-ONE");
         params.put("fake_key_2", "FOO-TWO");
         oAuth2ServiceProperties.setAdditionalAuthParams(params);
         String authUriEndsWith = "&fake_key_1=FOO-ONE&fake_key_2=FOO-TWO";
 
+        // when
         oAuth2AuthenticationEntryPoint.commence(httpServletRequest, httpServletResponse, null);
 
-        Mockito.verify(httpServletResponse).sendRedirect(Matchers.startsWith(generateExpectedURIStart()));
-        Mockito.verify(httpServletResponse).sendRedirect(Matchers.endsWith(authUriEndsWith));
+        // then
+        verify(httpServletResponse).sendRedirect(startsWith(generateExpectedURIStart()));
+        verify(httpServletResponse).sendRedirect(endsWith(authUriEndsWith));
     }
 
-    public String generateExpectedURIStart() {
-        StringBuilder authorisationUri = new StringBuilder();
-        authorisationUri.append(MOCK_USER_AUTHORISATION_URI)
+    private String generateExpectedURIStart() {
+        StringBuilder authorisationUri = new StringBuilder()
+                .append(MOCK_USER_AUTHORISATION_URI)
                 .append("?")
                 .append("client_id")
                 .append("=")
