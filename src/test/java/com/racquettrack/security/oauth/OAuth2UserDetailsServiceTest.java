@@ -48,9 +48,9 @@ public class OAuth2UserDetailsServiceTest {
     @Before
     public void setup() throws IOException {
 
-        oAuth2UserDetailsService.setOAuth2ServiceProperties(oAuth2ServiceProperties);
-        oAuth2UserDetailsService.setOAuth2UserDetailsLoader(oAuth2UserDetailsLoader);
-        oAuth2UserDetailsService.setOAuth2UserInfoProvider(oAuth2UserInfoProvider);
+        oAuth2UserDetailsService.setoAuth2ServiceProperties(oAuth2ServiceProperties);
+        oAuth2UserDetailsService.setoAuth2UserDetailsLoader(oAuth2UserDetailsLoader);
+        oAuth2UserDetailsService.setoAuth2UserInfoProvider(oAuth2UserInfoProvider);
 
         userInfoResponse = getUserInfoResponse();
 

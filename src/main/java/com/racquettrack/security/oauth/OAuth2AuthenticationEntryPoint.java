@@ -108,7 +108,7 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
         Assert.notNull(oAuth2ServiceProperties, "oAuth2ServiceProperties must be set");
     }
 
-    public void setOAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
+    public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
         this.oAuth2ServiceProperties = oAuth2ServiceProperties;
     }
 }

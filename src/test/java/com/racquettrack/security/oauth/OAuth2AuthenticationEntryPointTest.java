@@ -42,7 +42,7 @@ public class OAuth2AuthenticationEntryPointTest {
 
         given(httpServletRequest.getSession()).willReturn(httpSession);
 
-        oAuth2AuthenticationEntryPoint.setOAuth2ServiceProperties(oAuth2ServiceProperties);
+        oAuth2AuthenticationEntryPoint.setoAuth2ServiceProperties(oAuth2ServiceProperties);
     }
 
     @Test

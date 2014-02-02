@@ -115,15 +115,15 @@ public class OAuth2UserDetailsService implements
         Assert.notNull(oAuth2UserInfoProvider, "An oAuth2UserInfoProvider must be set");
     }
 
-    public void setOAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
+    public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {
         this.oAuth2ServiceProperties = oAuth2ServiceProperties;
     }
 
-    public void setOAuth2UserDetailsLoader(OAuth2UserDetailsLoader oAuth2UserDetailsLoader) {
+    public void setoAuth2UserDetailsLoader(OAuth2UserDetailsLoader oAuth2UserDetailsLoader) {
         this.oAuth2UserDetailsLoader = oAuth2UserDetailsLoader;
     }
 
-    public void setOAuth2UserInfoProvider(OAuth2UserInfoProvider oAuth2UserInfoProvider) {
+    public void setoAuth2UserInfoProvider(OAuth2UserInfoProvider oAuth2UserInfoProvider) {
         this.oAuth2UserInfoProvider = oAuth2UserInfoProvider;
     }
 }
