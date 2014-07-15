@@ -1,9 +1,9 @@
 package com.racquettrack.security.oauth;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-
-import java.util.Map;
 
 /**
  * Contains configuration properties for the OAuth2 Service Provider to authenticate against.
@@ -37,6 +37,7 @@ public class OAuth2ServiceProperties implements InitializingBean {
     private String clientId = null;
     private String clientSecret = null;
     private String userInfoUri = null;
+    private Map<String, String> additionalInfoParams = null;
 
     // Optional properties
     private String accessTokenName = DEFAULT_ACCESS_TOKEN_NAME;
@@ -177,6 +178,14 @@ public class OAuth2ServiceProperties implements InitializingBean {
 
     public void setUserInfoUri(String userInfoUri) {
         this.userInfoUri = userInfoUri;
+    }
+
+    public Map<String, String> getAdditionalInfoParams() {
+        return additionalInfoParams;
+    }
+
+    public void setAdditionalInfoParams(Map<String, String> additionalInfoParams) {
+        this.additionalInfoParams = additionalInfoParams;
     }
 
     public String getUserIdName() {

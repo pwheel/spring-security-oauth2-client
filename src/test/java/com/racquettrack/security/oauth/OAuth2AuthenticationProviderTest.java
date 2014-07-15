@@ -1,7 +1,13 @@
 package com.racquettrack.security.oauth;
 
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,11 +16,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
 
 /**
  * Tests for {@link OAuth2AuthenticationProvider}.
@@ -83,7 +86,7 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
     @Test(expected = AuthenticationException.class)
     public void shouldThrowAuthenticationExceptionWhenJerseyThrowsARuntimeError() {
         // given
-        given(builder.get(ClientResponse.class)).willThrow(ClientHandlerException.class);
+        given(builder.post(eq(ClientResponse.class), anyObject())).willThrow(ClientHandlerException.class);
 
         // when
         oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);

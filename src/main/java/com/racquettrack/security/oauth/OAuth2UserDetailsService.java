@@ -1,5 +1,8 @@
 package com.racquettrack.security.oauth;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -8,9 +11,6 @@ import org.springframework.security.core.userdetails.AuthenticationUserDetailsSe
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
-
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * An abstract implementation of an OAuth
@@ -55,7 +55,7 @@ public class OAuth2UserDetailsService implements
                     + token);
         }
 
-        UUID userId = getUserId(userInfo);
+        String userId = getUserId(userInfo);
 
         UserDetails userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
 
@@ -93,9 +93,8 @@ public class OAuth2UserDetailsService implements
      * @param userInfo The JSON string converted into a {@link Map}.
      * @return The user id, a {@link UUID}.
      */
-    protected UUID getUserId(Map<String, Object> userInfo) {
-        String uuid = (String)userInfo.get(oAuth2ServiceProperties.getUserIdName());
-        return UUID.fromString(uuid);
+    protected String getUserId(Map<String, Object> userInfo) {
+        return (String)userInfo.get(oAuth2ServiceProperties.getUserIdName());
     }
 
     /**
