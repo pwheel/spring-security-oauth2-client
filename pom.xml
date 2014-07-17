@@ -17,8 +17,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.spring-security>3.1.1.RELEASE</version.spring-security>
-        <version.spring>3.1.1.RELEASE</version.spring>
+        <version.spring-security>3.2.4.RELEASE</version.spring-security>
+        <version.spring>3.2.10.RELEASE</version.spring>
         <version.javaJDK>1.7</version.javaJDK>
         <version.jersey>1.14</version.jersey>
         <version.commons-lang3>3.1</version.commons-lang3>
