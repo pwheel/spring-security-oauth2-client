@@ -193,8 +193,13 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         values.add(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType());
         values.add(oAuth2ServiceProperties.getClientIdParamName(), oAuth2ServiceProperties.getClientId());
         values.add(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret());
-        values.add(oAuth2ServiceProperties.getRedirectUriParamName(), oAuth2ServiceProperties.getRedirectUri());
         values.add(oAuth2ServiceProperties.getCodeParamName(), (String)  authentication.getCredentials());
+
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            values.add(oAuth2ServiceProperties.getRedirectUriParamName(), ((OAuth2AuthenticationToken) authentication).getRedirectUri());
+        } else {
+            values.add(oAuth2ServiceProperties.getRedirectUriParamName(), oAuth2ServiceProperties.getRedirectUri());
+        }
 
         WebResource webResource = client.resource(oAuth2ServiceProperties.getAccessTokenUri());
         ClientResponse clientResponse = webResource

@@ -1,9 +1,9 @@
 package com.racquettrack.security.oauth;
 
+import java.util.Collection;
+
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.util.Collection;
 
 /**
  * Implementation of an {@link AbstractAuthenticationToken}. This will typically be created by a
@@ -24,6 +24,7 @@ public class OAuth2AuthenticationToken extends AbstractAuthenticationToken {
 
     private Object credential = null;
     private Object principal = null;
+    private String redirectUri = null;
 
     /**
      * Instantiates an {@link OAuth2AuthenticationToken} with just a {@link #credential}. This constructor
@@ -73,4 +74,22 @@ public class OAuth2AuthenticationToken extends AbstractAuthenticationToken {
     public Object getPrincipal() {
         return principal;
     }
+
+    /**
+     * Gets the redirect URI where this authentication token response should be sent
+     * @return redirectUri as an absolute URI in string form or null
+     */
+    public String getRedirectUri() {
+        return redirectUri;
+    }
+
+    /**
+     * Sets the redirect URI where this authentication token response should be sent
+     * @param redirectUri an absolute URI in string form or null
+     */
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
+
+
 }

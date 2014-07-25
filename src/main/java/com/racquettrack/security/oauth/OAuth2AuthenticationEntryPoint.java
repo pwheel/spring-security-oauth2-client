@@ -1,5 +1,12 @@
 package com.racquettrack.security.oauth;
 
+import java.io.IOException;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,12 +14,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.util.Assert;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * Provides a {@link AuthenticationEntryPoint} for initiating the OAuth2 authentication process.
@@ -46,7 +47,7 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
                 .append("&")
                 .append(oAuth2ServiceProperties.getRedirectUriParamName())
                 .append("=")
-                .append(oAuth2ServiceProperties.getRedirectUri())
+                .append(oAuth2ServiceProperties.getAbsoluteRedirectUri(request))
                 .append("&")
                 .append(oAuth2ServiceProperties.getResponseTypeParamName())
                 .append("=")
