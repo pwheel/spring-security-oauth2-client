@@ -191,6 +191,20 @@
                     <debug>true</debug>
                 </configuration>
             </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                  <execution>
+                    <id>attach-sources</id>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Quality control plugins to execute during build phase -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
