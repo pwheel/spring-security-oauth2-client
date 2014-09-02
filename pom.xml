@@ -23,6 +23,7 @@
         <version.jersey>1.14</version.jersey>
         <version.commons-lang3>3.1</version.commons-lang3>
         <version.commons-logging>1.1.1</version.commons-logging>
+        <version.jackson-jaxrs>1.9.12</version.jackson-jaxrs>
     </properties>
 
     <dependencies>
@@ -37,11 +38,6 @@
             <artifactId>spring-security-web</artifactId>
             <version>${version.spring-security}</version>
         </dependency>
-        <!-- dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-acl</artifactId>
-            <version>${version.spring-security}</version>
-        </dependency-->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
@@ -108,6 +104,11 @@
             <scope>test</scope>
         </dependency>
         <!-- End Jersey Dependencies -->
+        <dependency>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+          <version>${version.jackson-jaxrs}</version>
+        </dependency>
 
         <dependency>
             <groupId>javax.servlet</groupId>
