@@ -40,11 +40,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-config</artifactId>
-            <version>${version.spring-security}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-taglibs</artifactId>
             <version>${version.spring-security}</version>
         </dependency>
@@ -230,12 +225,12 @@
     <repository>
       <id>racquettrack</id>
       <name>RacquetTrack Releases</name>
-      <url>git:releases://git@bitbucket.org:racquettrack/maven-repo.git</url>
+      <url>git:master://git@bitbucket.org:racquettrack/maven-repo.git</url>
     </repository>
     <snapshotRepository>
       <id>racquettrack-snapshots</id>
       <name>RacquetTrack Snapshots</name>
-      <url>git:snapshots://git@bitbucket.org:racquettrack/maven-repo.git</url>
+      <url>git:master://git@bitbucket.org:racquettrack/maven-repo-snapshots.git</url>
     </snapshotRepository>
   </distributionManagement>
 
