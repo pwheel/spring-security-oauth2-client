@@ -4,7 +4,7 @@
     <groupId>com.racquettrack</groupId>
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
@@ -13,7 +13,8 @@
         <connection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</connection>
         <url>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</url>
         <developerConnection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</developerConnection>
-    </scm>
+      <tag>spring-security-oauth2-client-1.2</tag>
+  </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
