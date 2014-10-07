@@ -27,6 +27,7 @@ public class OAuth2UserDetailsService implements
     protected OAuth2ServiceProperties oAuth2ServiceProperties = null;
     protected OAuth2UserDetailsLoader oAuth2UserDetailsLoader = null;
     protected OAuth2UserInfoProvider oAuth2UserInfoProvider;
+    protected OAuth2PostCreateUserService oAuth2PostCreateUserService;
 
     /**
      * To obtain the user details from the token, the {@link OAuth2UserInfoProvider} is used.
@@ -64,7 +65,7 @@ public class OAuth2UserDetailsService implements
             LOGGER.debug("Okay to create new user {}", userId);
             userDetails = oAuth2UserDetailsLoader.createUser(userId, userInfo);
             LOGGER.info("Created new user: {}", userDetails);
-            userDetails = postCreateUser(userDetails, userInfo);
+            postCreateUser(userDetails, userInfo);
         } else if (userDetails != null) {
             userDetails = oAuth2UserDetailsLoader.updateUser(userDetails, userInfo);
         }
@@ -80,10 +81,11 @@ public class OAuth2UserDetailsService implements
      * @param userDetails The {@link UserDetails} object created by
      * {@link OAuth2UserDetailsLoader#createUser(java.util.UUID, java.util.Map)}
      * @param userInfo A map representing the user information returned from the OAuth Provider.
-     * @return The {@link UserDetails} object, which may have been updated.
      */
-    public UserDetails postCreateUser(UserDetails userDetails, Map<String, Object> userInfo) {
-        return userDetails;
+    private void postCreateUser(UserDetails userDetails, Map<String, Object> userInfo) {
+        if (oAuth2PostCreateUserService != null) {
+            oAuth2PostCreateUserService.postCreateUser(userDetails, userInfo);
+        }
     }
 
     /**
@@ -124,5 +126,9 @@ public class OAuth2UserDetailsService implements
 
     public void setoAuth2UserInfoProvider(OAuth2UserInfoProvider oAuth2UserInfoProvider) {
         this.oAuth2UserInfoProvider = oAuth2UserInfoProvider;
+    }
+
+    public void setoAuth2PostCreateUserService(OAuth2PostCreateUserService oAuth2PostCreateUserService) {
+        this.oAuth2PostCreateUserService = oAuth2PostCreateUserService;
     }
 }
