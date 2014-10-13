@@ -219,13 +219,6 @@
             </plugin>
             <!-- End Quality control plugins -->
         </plugins>
-      <extensions>
-        <extension>
-          <groupId>ar.com.synergian</groupId>
-          <artifactId>wagon-git</artifactId>
-          <version>0.2.3</version>
-        </extension>
-      </extensions>
     </build>
 
   <distributionManagement>
@@ -240,11 +233,4 @@
       <url>git:master://git@bitbucket.org:racquettrack/maven-repo-snapshots.git</url>
     </snapshotRepository>
   </distributionManagement>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>synergian-repo</id>
-      <url>https://raw.github.com/synergian/wagon-git/releases</url>
-    </pluginRepository>
-  </pluginRepositories>
 </project>
