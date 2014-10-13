@@ -1,9 +1,13 @@
 package com.racquettrack.security.oauth;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-
-import java.util.Map;
 
 /**
  * Contains configuration properties for the OAuth2 Service Provider to authenticate against.
@@ -37,6 +41,7 @@ public class OAuth2ServiceProperties implements InitializingBean {
     private String clientId = null;
     private String clientSecret = null;
     private String userInfoUri = null;
+    private Map<String, String> additionalInfoParams = null;
 
     // Optional properties
     private String accessTokenName = DEFAULT_ACCESS_TOKEN_NAME;
@@ -83,12 +88,47 @@ public class OAuth2ServiceProperties implements InitializingBean {
         this.additionalAuthParams = additionalAuthParams;
     }
 
+    /**
+     * The redirectUri which will handle responses from the OAuth2 provider.
+     * Can be relative or absolute
+     * @return
+     */
     public String getRedirectUri() {
         return redirectUri;
     }
 
+    /**
+     * The redirectUri which will handle responses from the OAuth2 provider.
+     * Can be relative or absolute
+     * @param redirectUri
+     */
     public void setRedirectUri(String redirectUri) {
         this.redirectUri = redirectUri;
+    }
+
+    /**
+     * If redirectUri is absolute then this method will return redirectUri.
+     * Otherwise the redirectUri's path will be combined with the incoming
+     * servlet request to form an absolute URI relevant to the servlet request
+     *
+     * @see getRedirectUri
+     * @return The absolute redirectUri in the form of a string
+     */
+    public String getAbsoluteRedirectUri(HttpServletRequest request) {
+        URI redirectUri = URI.create(this.getRedirectUri());
+        if (!redirectUri.isAbsolute()) {
+            URI requestUri = URI.create(request.getRequestURL().toString());
+            String newPath = request.getContextPath() +
+                    (redirectUri.getPath().startsWith("/") ? "" : "/" )+
+                    redirectUri.getPath();
+            try {
+                redirectUri = new URI(requestUri.getScheme(), null, requestUri.getHost(), requestUri.getPort(), newPath, null, null);
+            } catch (URISyntaxException e) {
+                return null;
+            }
+        }
+
+        return redirectUri.toString();
     }
 
     public String getAccessTokenUri() {
@@ -177,6 +217,14 @@ public class OAuth2ServiceProperties implements InitializingBean {
 
     public void setUserInfoUri(String userInfoUri) {
         this.userInfoUri = userInfoUri;
+    }
+
+    public Map<String, String> getAdditionalInfoParams() {
+        return additionalInfoParams;
+    }
+
+    public void setAdditionalInfoParams(Map<String, String> additionalInfoParams) {
+        this.additionalInfoParams = additionalInfoParams;
     }
 
     public String getUserIdName() {

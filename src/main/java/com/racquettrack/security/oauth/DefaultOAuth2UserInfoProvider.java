@@ -1,6 +1,10 @@
 package com.racquettrack.security.oauth;
 
-import com.sun.jersey.api.client.*;
+import java.io.IOException;
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -9,9 +13,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.Assert;
 
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.Map;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
 /**
  * A default implementation of {@link OAuth2UserInfoProvider} that obtains a {@link Map} of properties
@@ -65,6 +71,12 @@ public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, In
         WebResource webResource = client
                 .resource(oAuth2ServiceProperties.getUserInfoUri())
                 .queryParam(oAuth2ServiceProperties.getAccessTokenName(), (String)token.getCredentials());
+
+        if (oAuth2ServiceProperties.getAdditionalInfoParams() != null) {
+            for (Map.Entry<String, String> entry : oAuth2ServiceProperties.getAdditionalInfoParams().entrySet()) {
+                webResource = webResource.queryParam(entry.getKey(), entry.getValue());
+            }
+        }
 
         ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(ClientResponse.class);

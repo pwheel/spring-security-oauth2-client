@@ -10,7 +10,7 @@ The [Spring Security OAuth](http://static.springsource.org/spring-security/oauth
 
 This project allows you to directly authenticate with the OAuth Provider in the first instance, rather than as a secondary step.
 I was unable to find a project that was easily extensible enough to do what I wanted, so this project was born.
-It has been tested against DailyCred.
+It has been tested against DailyCred and Google.
 
 Usage
 ----
@@ -45,18 +45,17 @@ Example usage:
     </authentication-manager>
 
     <beans:bean id="oauth2ServiceProperties" class="com.racquettrack.security.oauth.OAuth2ServiceProperties">
-        <beans:property name="accessTokenUri" value="https://www.dailycred.com/oauth/access_token"/>
-        <beans:property name="userAuthorisationUri" value="https://www.dailycred.com/connect"/>
+        <beans:property name="accessTokenUri" value="https://accounts.google.com/o/oauth2/token"/>
+        <beans:property name="userAuthorisationUri" value="https://accounts.google.com/o/oauth2/auth"/>
         <beans:property name="additionalAuthParams">
             <beans:map>
-                <beans:entry key="egKey1" value="egValue1"/>
-                <beans:entry key="egKey2" value="egValue2"/>
+                <beans:entry key="scope" value="https://www.googleapis.com/auth/userinfo.email"/>
             </beans:map>
         </beans:property>
-        <beans:property name="redirectUri" value="http://localhost:8080/oauth/callback"/>
+        <beans:property name="redirectUri" value="/oauth/callback"/>
         <beans:property name="clientId" value="${oauth2.client_id}"/>
         <beans:property name="clientSecret" value="${oauth2.client_secret}"/>
-        <beans:property name="userInfoUri" value="https://www.dailycred.com/graph/me.json"/>
+        <beans:property name="userInfoUri" value="https://www.googleapis.com/oauth2/v2/userinfo"/>
     </beans:bean>
 
     <beans:bean id="oAuth2UserDetailsService" class="com.racquettrack.security.oauth.OAuth2UserDetailsService">
@@ -65,13 +64,19 @@ Example usage:
     </bean>
 
 1.  Define your OAuth2ServiceProperties class. This class is a placeholder for the configuration of your OAuth Provider. Important properties are:
-userAuthorisationUri - This is the URI that a user will be redirected to on trying to authentication / hitting the Authentication Entry Point
-additionalAuthParams - Any additional query parameters that you want sent to the OAuth Provider as part of the authorisation redirect.
-redirectUri - This is the URI that the OAuth Provider will redirect the user to (on your site) if they successfully authenticate. Must be the same as the OAuth2AuthenticationFilter is listening on.
-accessTokenUri - This is the REST URI that should be called to obtain an access token from the code. This is called by the OAuth2AuthenticationFilter after the redirect from the OAuth Provider.
-clientId - Your client id, given to you by the OAuth Provider.
-clientSecret - Your client secret, given to you by the OAuth Provider. It is important to keep this secret.
-userInfoUri - The REST URI in the OAuth Provider's system, that will be called to obtain additional information, e.g. the user id, about the user once an access token has been obtained.
+
+    **userAuthorisationUri** - This is the URI that a user will be redirected to on trying to authentication / hitting the Authentication Entry Point
+
+    **additionalAuthParams** - Any additional query parameters that you want sent to the OAuth Provider as part of the authorisation redirect.
+
+    **redirectUri** - This is the URI that the OAuth Provider will redirect the user to (on your site) if they successfully authenticate. Must be the same as the OAuth2AuthenticationFilter is listening on. This can be an absolute or relative URI. Relative URI's will be resolved against the incoming request URI.
+
+    **accessTokenUri** - This is the REST URI that should be called to obtain an access token from the code. This is called by the OAuth2AuthenticationFilter after the redirect from the OAuth Provider.
+
+    **clientId** - Your client id, given to you by the OAuth Provider.
+    clientSecret - Your client secret, given to you by the OAuth Provider. It is important to keep this secret.
+
+    **userInfoUri** - The REST URI in the OAuth Provider's system, that will be called to obtain additional information, e.g. the user id, about the user once an access token has been obtained.
 
 2.  Define your OAuth2UserDetailsService. This is called by the (OAuth2)AuthenticationProvider. You must define a bean (userFacade above) that implements the OAuth2UserDetailsLoader. Accounts in your system are linked to those in the OAuth Provider by the user id; this class resolves the local accounts and creates them if a new uesr has been created in the OAuth Provider.
 

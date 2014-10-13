@@ -10,11 +10,10 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.UUID;
+
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -26,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 /**
  * Tests for the {@link OAuth2UserDetailsService}.
  *
@@ -47,7 +45,7 @@ public class OAuth2UserDetailsServiceTest {
 
     private OAuth2ServiceProperties oAuth2ServiceProperties = new OAuth2ServiceProperties();
     private OAuth2AuthenticationToken oAuth2AuthenticationToken = new OAuth2AuthenticationToken(MOCK_ACCESS_TOKEN);
-    private UUID userId = UUID.fromString(MOCK_USER_UUID);
+    private String userId = MOCK_USER_UUID;
     private Map<String, Object> userInfoResponse;
 
     // Mocks
@@ -103,7 +101,7 @@ public class OAuth2UserDetailsServiceTest {
         UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
 
         // then
-        verify(oAuth2UserDetailsLoader, never()).createUser(any(UUID.class), anyMapOf(String.class, Object.class));
+        verify(oAuth2UserDetailsLoader, never()).createUser(any(String.class), anyMapOf(String.class, Object.class));
         verify(oAuth2UserDetailsLoader).updateUser(ud, userInfoResponse);
         assertThat(ud, is(user));
     }

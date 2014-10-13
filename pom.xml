@@ -4,7 +4,7 @@
     <groupId>com.racquettrack</groupId>
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3-AUSCOPE-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
@@ -18,8 +18,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.spring-security>3.1.1.RELEASE</version.spring-security>
-        <version.spring>3.1.1.RELEASE</version.spring>
+        <version.spring-security>3.2.4.RELEASE</version.spring-security>
+        <version.spring>3.2.10.RELEASE</version.spring>
         <version.javaJDK>1.7</version.javaJDK>
         <version.jersey>1.14</version.jersey>
         <version.commons-lang3>3.1</version.commons-lang3>
@@ -180,6 +180,20 @@
                     <debug>true</debug>
                 </configuration>
             </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                  <execution>
+                    <id>attach-sources</id>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Quality control plugins to execute during build phase -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -205,13 +219,6 @@
             </plugin>
             <!-- End Quality control plugins -->
         </plugins>
-      <extensions>
-        <extension>
-          <groupId>ar.com.synergian</groupId>
-          <artifactId>wagon-git</artifactId>
-          <version>0.2.3</version>
-        </extension>
-      </extensions>
     </build>
 
   <distributionManagement>
@@ -226,11 +233,4 @@
       <url>git:master://git@bitbucket.org:racquettrack/maven-repo-snapshots.git</url>
     </snapshotRepository>
   </distributionManagement>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>synergian-repo</id>
-      <url>https://raw.github.com/synergian/wagon-git/releases</url>
-    </pluginRepository>
-  </pluginRepositories>
 </project>

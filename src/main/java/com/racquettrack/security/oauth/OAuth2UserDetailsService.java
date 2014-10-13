@@ -56,7 +56,7 @@ public class OAuth2UserDetailsService implements
                     + token);
         }
 
-        UUID userId = getUserId(userInfo);
+        String userId = getUserId(userInfo);
 
         UserDetails userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
 
@@ -95,9 +95,8 @@ public class OAuth2UserDetailsService implements
      * @param userInfo The JSON string converted into a {@link Map}.
      * @return The user id, a {@link UUID}.
      */
-    protected UUID getUserId(Map<String, Object> userInfo) {
-        String uuid = (String)userInfo.get(oAuth2ServiceProperties.getUserIdName());
-        return UUID.fromString(uuid);
+    protected String getUserId(Map<String, Object> userInfo) {
+        return (String)userInfo.get(oAuth2ServiceProperties.getUserIdName());
     }
 
     /**
