@@ -1,21 +1,5 @@
 package com.racquettrack.security.oauth;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyMapOf;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Map;
-import java.util.UUID;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.Before;
@@ -26,6 +10,17 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the {@link OAuth2UserDetailsService}.
@@ -56,7 +51,7 @@ public class OAuth2UserDetailsServiceTest {
     @Mock
     private OAuth2UserInfoProvider oAuth2UserInfoProvider;
     @Mock
-    private OAuth2PostCreateUserService oAuth2PostCreateUserService;
+    private OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService;
     @InjectMocks
     private OAuth2UserDetailsService oAuth2UserDetailsService;
 
@@ -118,9 +113,10 @@ public class OAuth2UserDetailsServiceTest {
     }
 
     @Test
-    public void shouldCallOAuthPostCreateUserServiceWhenNewUser() {
+    public void shouldCallOAuthPostCreatedOrEnabledUserServiceWhenNewUserAndEnabled() {
         // given
         given(oAuth2UserDetailsLoader.isCreatable(anyMapOf(String.class, Object.class))).willReturn(true);
+        given(user.isEnabled()).willReturn(true);
 
         // when
         UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
@@ -128,7 +124,26 @@ public class OAuth2UserDetailsServiceTest {
         // then
         assertThat(ud, notNullValue());
         assertThat(ud, is(user));
-        verify(oAuth2PostCreateUserService).postCreateUser(ud, userInfoResponse);
+        verify(oAuth2PostCreatedOrEnabledUserService).postCreatedOrEnabledUser(ud, userInfoResponse);
+    }
+
+    @Test
+    public void shouldCallUpdateUserAndOAuthPostCreatedOrEnabledUserServiceWhenUserIsNowEnabled() {
+        // given
+        UserDetails origUserDetails = mock(UserDetails.class);
+        given(origUserDetails.isEnabled()).willReturn(false);
+        given(oAuth2UserDetailsLoader.getUserByUserId(userId)).willReturn(origUserDetails);
+        given(oAuth2UserDetailsLoader.updateUser(eq(origUserDetails), anyMapOf(String.class, Object.class))).willReturn(user);
+        given(user.isEnabled()).willReturn(true);
+
+        // when
+        UserDetails ud = oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
+
+        // then
+        assertThat(ud, notNullValue());
+        assertThat(ud, is(user));
+        verify(oAuth2PostCreatedOrEnabledUserService).postCreatedOrEnabledUser(ud, userInfoResponse);
+        verify(oAuth2UserDetailsLoader).updateUser(eq(origUserDetails), anyMapOf(String.class, Object.class));
     }
 
     private Map<String, Object> getUserInfoResponse() throws IOException {
