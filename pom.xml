@@ -218,12 +218,12 @@
     <repository>
       <id>racquettrack</id>
       <name>RacquetTrack Releases</name>
-      <url>git:master://git@bitbucket.org:racquettrack/maven-repo.git</url>
+      <url>git:releases://git@bitbucket.org:racquettrack/maven-repo.git</url>
     </repository>
     <snapshotRepository>
       <id>racquettrack-snapshots</id>
       <name>RacquetTrack Snapshots</name>
-      <url>git:master://git@bitbucket.org:racquettrack/maven-repo-snapshots.git</url>
+      <url>git:snapshots://git@bitbucket.org:racquettrack/maven-repo.git</url>
     </snapshotRepository>
   </distributionManagement>
 
