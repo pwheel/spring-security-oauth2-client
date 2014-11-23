@@ -1,8 +1,5 @@
 package com.racquettrack.security.oauth;
 
-import java.util.Map;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -11,6 +8,9 @@ import org.springframework.security.core.userdetails.AuthenticationUserDetailsSe
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
+
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * An abstract implementation of an OAuth
@@ -27,7 +27,7 @@ public class OAuth2UserDetailsService implements
     protected OAuth2ServiceProperties oAuth2ServiceProperties = null;
     protected OAuth2UserDetailsLoader oAuth2UserDetailsLoader = null;
     protected OAuth2UserInfoProvider oAuth2UserInfoProvider;
-    protected OAuth2PostCreateUserService oAuth2PostCreateUserService;
+    protected OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService;
 
     /**
      * To obtain the user details from the token, the {@link OAuth2UserInfoProvider} is used.
@@ -59,32 +59,35 @@ public class OAuth2UserDetailsService implements
         String userId = getUserId(userInfo);
 
         UserDetails userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
+        boolean wasCreatedAndEnabled = userDetails != null && userDetails.isEnabled();
 
         // If we didn't find the user account, check to see if an account can be created
         if (userDetails == null && oAuth2UserDetailsLoader.isCreatable(userInfo)) {
             LOGGER.debug("Okay to create new user {}", userId);
             userDetails = oAuth2UserDetailsLoader.createUser(userId, userInfo);
             LOGGER.info("Created new user: {}", userDetails);
-            postCreateUser(userDetails, userInfo);
         } else if (userDetails != null) {
             userDetails = oAuth2UserDetailsLoader.updateUser(userDetails, userInfo);
         }
         if (userDetails == null) {
             throw new UsernameNotFoundException("Failed to find userId: " + userId + ", from token: " + token);
+        } else if (!wasCreatedAndEnabled && userDetails.isEnabled()) {
+            postCreatedOrEnabledUser(userDetails, userInfo);
         }
         return userDetails;
     }
 
     /**
-     * Extension point to allow sub classes to optionally do some processing after a user has been created. For example
-     * they could make a call to update the OAuth Provider or retrieve additional information from the OAuth Provider.
+     * Extension point to allow sub classes to optionally do some processing after a user has been created or enabled.
+     * For example they could set something in the session so that the authentication success handler can treat
+     * the first log in differently.
      * @param userDetails The {@link UserDetails} object created by
      * {@link OAuth2UserDetailsLoader#createUser(java.util.UUID, java.util.Map)}
      * @param userInfo A map representing the user information returned from the OAuth Provider.
      */
-    private void postCreateUser(UserDetails userDetails, Map<String, Object> userInfo) {
-        if (oAuth2PostCreateUserService != null) {
-            oAuth2PostCreateUserService.postCreateUser(userDetails, userInfo);
+    private void postCreatedOrEnabledUser(UserDetails userDetails, Map<String, Object> userInfo) {
+        if (oAuth2PostCreatedOrEnabledUserService != null) {
+            oAuth2PostCreatedOrEnabledUserService.postCreatedOrEnabledUser(userDetails, userInfo);
         }
     }
 
@@ -128,7 +131,7 @@ public class OAuth2UserDetailsService implements
         this.oAuth2UserInfoProvider = oAuth2UserInfoProvider;
     }
 
-    public void setoAuth2PostCreateUserService(OAuth2PostCreateUserService oAuth2PostCreateUserService) {
-        this.oAuth2PostCreateUserService = oAuth2PostCreateUserService;
+    public void setoAuth2PostCreatedOrEnabledUserService(OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService) {
+        this.oAuth2PostCreatedOrEnabledUserService = oAuth2PostCreatedOrEnabledUserService;
     }
 }

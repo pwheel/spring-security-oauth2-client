@@ -4,7 +4,7 @@
     <groupId>com.racquettrack</groupId>
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
-    <version>1.3-AUSCOPE-SNAPSHOT</version>
+    <version>1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
@@ -219,18 +219,32 @@
             </plugin>
             <!-- End Quality control plugins -->
         </plugins>
+      <extensions>
+        <extension>
+          <groupId>ar.com.synergian</groupId>
+          <artifactId>wagon-git</artifactId>
+          <version>0.2.3</version>
+        </extension>
+      </extensions>
     </build>
 
   <distributionManagement>
     <repository>
       <id>racquettrack</id>
       <name>RacquetTrack Releases</name>
-      <url>git:master://git@bitbucket.org:racquettrack/maven-repo.git</url>
+      <url>git:releases://git@bitbucket.org:racquettrack/maven-repo.git</url>
     </repository>
     <snapshotRepository>
       <id>racquettrack-snapshots</id>
       <name>RacquetTrack Snapshots</name>
-      <url>git:master://git@bitbucket.org:racquettrack/maven-repo-snapshots.git</url>
+      <url>git:snapshots://git@bitbucket.org:racquettrack/maven-repo.git</url>
     </snapshotRepository>
   </distributionManagement>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>synergian-repo</id>
+      <url>https://raw.github.com/synergian/wagon-git/releases</url>
+    </pluginRepository>
+  </pluginRepositories>
 </project>
