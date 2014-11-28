@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +34,7 @@ public class OAuth2AuthenticationFilterTest {
     private static final String MOCK_STATE_VALUE ="123456789a";
     private static final String MOCK_CODE_VALUE = "987654321a";
     private static final String MOCK_TOKEN_VALUE ="FOO-TOKEN";
-    private static final String MOCK_REDIRECT_URI = "http://example.com/mock/redirect";
+    private static final String MOCK_REDIRECT = "http://example.com/mock/redirect";
 
     private OAuth2AuthenticationFilter filter = new OAuth2AuthenticationFilter("/some/url");
     private static final String mockUri = "/some/url";
@@ -46,9 +48,11 @@ public class OAuth2AuthenticationFilterTest {
     private AuthenticationDetailsSource<HttpServletRequest,?> authenticationDetailsSource = new WebAuthenticationDetailsSource();
     private Map<String, String[]> parameters = new HashMap<>();
     private OAuth2AuthenticationToken expectedAuthRequest = new OAuth2AuthenticationToken(MOCK_CODE_VALUE);
+    private URI mockRedirectUri;
 
     @Before
-    public void setup() {
+    public void setup() throws URISyntaxException {
+        mockRedirectUri = new URI(MOCK_REDIRECT);
         filter.setoAuth2ServiceProperties(mockoAuth2ServiceProperties);
         filter.setAuthenticationManager(authenticationManager);
 
@@ -59,8 +63,7 @@ public class OAuth2AuthenticationFilterTest {
         Mockito.when(httpServletRequest.getParameterMap()).thenReturn(parameters);
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn(mockUri);
         Mockito.when(httpServletRequest.getQueryString()).thenReturn(mockQueryString);
-        Mockito.when(mockoAuth2ServiceProperties.getAbsoluteRedirectUri(httpServletRequest)).thenReturn(MOCK_REDIRECT_URI);
-        Mockito.when(mockoAuth2ServiceProperties.getRedirectUri()).thenReturn(MOCK_REDIRECT_URI);
+        Mockito.when(mockoAuth2ServiceProperties.getRedirectUri()).thenReturn(mockRedirectUri);
         Mockito.when(mockoAuth2ServiceProperties.getStateParamName()).thenReturn(new OAuth2ServiceProperties().getStateParamName());
         Mockito.when(mockoAuth2ServiceProperties.getCodeParamName()).thenReturn(new OAuth2ServiceProperties().getCodeParamName());
         Mockito.when(httpSession.getAttribute("state")).thenReturn(MOCK_STATE_VALUE);

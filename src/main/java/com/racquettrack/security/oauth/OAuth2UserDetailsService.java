@@ -1,16 +1,17 @@
 package com.racquettrack.security.oauth;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
-
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * An abstract implementation of an OAuth
@@ -20,12 +21,16 @@ import java.util.UUID;
  *
  * @author paul.wheeler
  */
-public class OAuth2UserDetailsService implements
+public class OAuth2UserDetailsService<I> implements
         AuthenticationUserDetailsService, InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2UserDetailsService.class);
 
+    protected static final String NO_CONVERTER_CONFIGURED_EXCEPTION_MSG =
+            "Invalid Configuration? If the ID type is not String you must specify an idConverter";
+
     protected OAuth2ServiceProperties oAuth2ServiceProperties = null;
-    protected OAuth2UserDetailsLoader oAuth2UserDetailsLoader = null;
+    protected OAuth2UserDetailsLoader<UserDetails, I> oAuth2UserDetailsLoader = null;
+    protected Converter<String, I> idConverter = null;
     protected OAuth2UserInfoProvider oAuth2UserInfoProvider;
     protected OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService;
 
@@ -56,9 +61,15 @@ public class OAuth2UserDetailsService implements
                     + token);
         }
 
-        String userId = getUserId(userInfo);
+        I userId = getUserId(userInfo);
 
-        UserDetails userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
+        UserDetails userDetails;
+        try {
+            userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
+        } catch (ClassCastException e) {
+            throw new RuntimeException(NO_CONVERTER_CONFIGURED_EXCEPTION_MSG, e);
+        }
+
         boolean wasCreatedAndEnabled = userDetails != null && userDetails.isEnabled();
 
         // If we didn't find the user account, check to see if an account can be created
@@ -82,7 +93,7 @@ public class OAuth2UserDetailsService implements
      * For example they could set something in the session so that the authentication success handler can treat
      * the first log in differently.
      * @param userDetails The {@link UserDetails} object created by
-     * {@link OAuth2UserDetailsLoader#createUser(java.util.UUID, java.util.Map)}
+     * {@link OAuth2UserDetailsLoader#createUser(Object, Map)}
      * @param userInfo A map representing the user information returned from the OAuth Provider.
      */
     private void postCreatedOrEnabledUser(UserDetails userDetails, Map<String, Object> userInfo) {
@@ -98,8 +109,16 @@ public class OAuth2UserDetailsService implements
      * @param userInfo The JSON string converted into a {@link Map}.
      * @return The user id, a {@link UUID}.
      */
-    protected String getUserId(Map<String, Object> userInfo) {
-        return (String)userInfo.get(oAuth2ServiceProperties.getUserIdName());
+    protected I getUserId(Map<String, Object> userInfo) {
+        I id;
+        String idAsString = (String) userInfo.get(oAuth2ServiceProperties.getUserIdName());
+        if (idConverter != null) {
+            id = idConverter.convert(idAsString);
+        } else {
+            id = (I) idAsString;
+        }
+
+        return id;
     }
 
     /**
@@ -123,7 +142,7 @@ public class OAuth2UserDetailsService implements
         this.oAuth2ServiceProperties = oAuth2ServiceProperties;
     }
 
-    public void setoAuth2UserDetailsLoader(OAuth2UserDetailsLoader oAuth2UserDetailsLoader) {
+    public void setoAuth2UserDetailsLoader(OAuth2UserDetailsLoader<UserDetails, I> oAuth2UserDetailsLoader) {
         this.oAuth2UserDetailsLoader = oAuth2UserDetailsLoader;
     }
 
@@ -133,5 +152,9 @@ public class OAuth2UserDetailsService implements
 
     public void setoAuth2PostCreatedOrEnabledUserService(OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService) {
         this.oAuth2PostCreatedOrEnabledUserService = oAuth2PostCreatedOrEnabledUserService;
+    }
+
+    public void setIdConverter(Converter<String, I> idConverter) {
+        this.idConverter = idConverter;
     }
 }

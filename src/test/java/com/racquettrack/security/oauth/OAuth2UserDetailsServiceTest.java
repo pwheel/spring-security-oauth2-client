@@ -1,5 +1,6 @@
 package com.racquettrack.security.oauth;
 
+import static com.racquettrack.security.oauth.OAuth2UserDetailsService.NO_CONVERTER_CONFIGURED_EXCEPTION_MSG;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
@@ -24,19 +25,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests for the {@link OAuth2UserDetailsService}.
@@ -160,6 +151,42 @@ public class OAuth2UserDetailsServiceTest {
         assertThat(ud, is(user));
         verify(oAuth2PostCreatedOrEnabledUserService).postCreatedOrEnabledUser(ud, userInfoResponse);
         verify(oAuth2UserDetailsLoader).updateUser(eq(origUserDetails), anyMapOf(String.class, Object.class));
+    }
+
+    @Test
+    public void shouldThrowRuntimeExceptionWhenIdIsNotStringAndNoConverterIsConfigured() {
+        // given
+        given(oAuth2UserDetailsLoader.getUserByUserId(userId)).willThrow(
+                new ClassCastException("java.lang.String cannot be cast to java.util.UUID"));
+        RuntimeException exception = null;
+
+        // when
+        try {
+            oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
+        } catch (RuntimeException e) {
+            exception = e;
+        }
+
+        // then
+        assertThat(exception, notNullValue());
+        assertThat(exception.getMessage(), is(NO_CONVERTER_CONFIGURED_EXCEPTION_MSG));
+    }
+
+    @Test
+    public void shouldConvertIdWhenConverterIsConfigured() {
+        // given
+        UUID userIdAsUuid = UUID.fromString(userId);
+        Converter converter = mock(Converter.class);
+        given(converter.convert(userId)).willReturn(userIdAsUuid);
+        oAuth2UserDetailsService.setIdConverter(converter);
+        given(oAuth2UserDetailsLoader.getUserByUserId(userIdAsUuid)).willReturn(user);
+        given(oAuth2UserDetailsLoader.updateUser(eq(user), anyMapOf(String.class, Object.class))).willReturn(user);
+
+        // when
+        oAuth2UserDetailsService.loadUserDetails(oAuth2AuthenticationToken);
+
+        // then
+        verify(converter).convert(userId);
     }
 
     private Map<String, Object> getUserInfoResponse() throws IOException {

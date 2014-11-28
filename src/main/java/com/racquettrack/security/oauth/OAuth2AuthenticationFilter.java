@@ -93,7 +93,6 @@ public class OAuth2AuthenticationFilter extends AbstractAuthenticationProcessing
 
         // Allow subclasses to set the "details" property
         setDetails(request, authRequest);
-        authRequest.setRedirectUri(oAuth2ServiceProperties.getAbsoluteRedirectUri(request));
 
         return this.getAuthenticationManager().authenticate(authRequest);
     }
@@ -168,7 +167,7 @@ public class OAuth2AuthenticationFilter extends AbstractAuthenticationProcessing
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         Assert.notNull(oAuth2ServiceProperties);
-        Assert.isTrue(oAuth2ServiceProperties.getRedirectUri().endsWith(super.getFilterProcessesUrl()),
+        Assert.isTrue(oAuth2ServiceProperties.getRedirectUri().toString().endsWith(super.getFilterProcessesUrl()),
                 "The filter must be configured to be listening on the redirect_uri in OAuth2ServiceProperties");
     }
 }

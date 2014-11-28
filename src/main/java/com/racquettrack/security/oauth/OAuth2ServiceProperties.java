@@ -4,8 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
@@ -36,7 +34,7 @@ public class OAuth2ServiceProperties implements InitializingBean {
     // Mandatory properties
     private String userAuthorisationUri = null;
     private Map<String, String> additionalAuthParams = null;
-    private String redirectUri = null;
+    private URI redirectUri = null;
     private String accessTokenUri = null;
     private String clientId = null;
     private String clientSecret = null;
@@ -91,44 +89,19 @@ public class OAuth2ServiceProperties implements InitializingBean {
     /**
      * The redirectUri which will handle responses from the OAuth2 provider.
      * Can be relative or absolute
-     * @return
+     * @return The redirect {@link URI}
      */
-    public String getRedirectUri() {
+    public URI getRedirectUri() {
         return redirectUri;
     }
 
     /**
      * The redirectUri which will handle responses from the OAuth2 provider.
      * Can be relative or absolute
-     * @param redirectUri
+     * @param redirectUri The redirect URI as a string; will be converted to a {@link URI}
      */
-    public void setRedirectUri(String redirectUri) {
-        this.redirectUri = redirectUri;
-    }
-
-    /**
-     * If redirectUri is absolute then this method will return redirectUri.
-     * Otherwise the redirectUri's path will be combined with the incoming
-     * servlet request to form an absolute URI relevant to the servlet request
-     *
-     * @see getRedirectUri
-     * @return The absolute redirectUri in the form of a string
-     */
-    public String getAbsoluteRedirectUri(HttpServletRequest request) {
-        URI redirectUri = URI.create(this.getRedirectUri());
-        if (!redirectUri.isAbsolute()) {
-            URI requestUri = URI.create(request.getRequestURL().toString());
-            String newPath = request.getContextPath() +
-                    (redirectUri.getPath().startsWith("/") ? "" : "/" )+
-                    redirectUri.getPath();
-            try {
-                redirectUri = new URI(requestUri.getScheme(), null, requestUri.getHost(), requestUri.getPort(), newPath, null, null);
-            } catch (URISyntaxException e) {
-                return null;
-            }
-        }
-
-        return redirectUri.toString();
+    public void setRedirectUri(String redirectUri) throws URISyntaxException {
+        this.redirectUri = new URI(redirectUri);
     }
 
     public String getAccessTokenUri() {

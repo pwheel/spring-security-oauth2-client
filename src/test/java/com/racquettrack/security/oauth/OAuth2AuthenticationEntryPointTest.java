@@ -1,22 +1,27 @@
 package com.racquettrack.security.oauth;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.endsWith;
 import static org.mockito.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 /**
  * Test for {@link OAuth2AuthenticationEntryPoint}.
@@ -35,7 +40,7 @@ public class OAuth2AuthenticationEntryPointTest {
     private OAuth2AuthenticationEntryPoint oAuth2AuthenticationEntryPoint = new OAuth2AuthenticationEntryPoint();
 
     @Before
-    public void setup() {
+    public void setup() throws URISyntaxException {
         oAuth2ServiceProperties.setUserAuthorisationUri(MOCK_USER_AUTHORISATION_URI);
         oAuth2ServiceProperties.setClientId(MOCK_CLIENT_ID);
         oAuth2ServiceProperties.setRedirectUri(MOCK_REDIRECT_URI);
@@ -71,6 +76,25 @@ public class OAuth2AuthenticationEntryPointTest {
         // then
         verify(httpServletResponse).sendRedirect(startsWith(generateExpectedURIStart()));
         verify(httpServletResponse).sendRedirect(endsWith(authUriEndsWith));
+    }
+
+    @Test
+    public void shouldRedirectWithDynamicUrlWhenRedirectIsNotAbsolute() throws IOException, ServletException, URISyntaxException {
+        // given
+        oAuth2ServiceProperties.setRedirectUri("/oauth/callback");
+        given(httpServletRequest.getServerName()).willReturn("host.com");
+        given(httpServletRequest.getScheme()).willReturn("https");
+        given(httpServletRequest.getServerPort()).willReturn(443);
+        given(httpServletRequest.getContextPath()).willReturn("/context");
+
+        // when
+        oAuth2AuthenticationEntryPoint.commence(httpServletRequest, httpServletResponse, null);
+
+        // then
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        String url = captor.getValue();
+        assertThat(url, containsString("redirect_uri=https://host.com:443/context/oauth/callback"));
     }
 
     private String generateExpectedURIStart() {

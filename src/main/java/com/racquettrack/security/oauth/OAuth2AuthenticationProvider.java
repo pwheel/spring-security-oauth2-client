@@ -1,9 +1,12 @@
 package com.racquettrack.security.oauth;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -189,17 +192,13 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
     private ClientResponse getClientResponseForAccessTokenRequestFrom(Authentication authentication) {
         Client client = getClient();
 
-        MultivaluedMapImpl values = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> values = new MultivaluedMapImpl();
         values.add(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType());
         values.add(oAuth2ServiceProperties.getClientIdParamName(), oAuth2ServiceProperties.getClientId());
         values.add(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret());
         values.add(oAuth2ServiceProperties.getCodeParamName(), (String)  authentication.getCredentials());
-
-        if (authentication instanceof OAuth2AuthenticationToken) {
-            values.add(oAuth2ServiceProperties.getRedirectUriParamName(), ((OAuth2AuthenticationToken) authentication).getRedirectUri());
-        } else {
-            values.add(oAuth2ServiceProperties.getRedirectUriParamName(), oAuth2ServiceProperties.getRedirectUri());
-        }
+        URI redirectUri = redirectUriUsing(authentication);
+        values.add(oAuth2ServiceProperties.getRedirectUriParamName(), redirectUri.toString());
 
         WebResource webResource = client.resource(oAuth2ServiceProperties.getAccessTokenUri());
         ClientResponse clientResponse = webResource
@@ -230,6 +229,33 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         }
 
         return userInfo;
+    }
+
+    /**
+     * If a dynamic scheme, host, port, and context path was set then use it to generate the redirect URI.
+     * Uses the details on the {@link OAuth2WebAuthenticationDetails} combined with
+     * {@link OAuth2ServiceProperties#getRedirectUri()}.
+     * @param authentication    The {@link Authentication} token.
+     * @return  The dynamic redirect URI, or {@code null} if one could not be obtained.
+     */
+    private URI redirectUriUsing(Authentication authentication) {
+        URI redirectUri;
+
+        Object details = authentication.getDetails();
+        if (details != null && OAuth2WebAuthenticationDetails.class.isAssignableFrom(details.getClass())
+                && !oAuth2ServiceProperties.getRedirectUri().isAbsolute()) {
+            OAuth2WebAuthenticationDetails oAuth2WebAuthenticationDetails = (OAuth2WebAuthenticationDetails) details;
+            redirectUri = UriBuilder.fromPath(oAuth2WebAuthenticationDetails.getContextPath())
+                    .path(oAuth2ServiceProperties.getRedirectUri().toString())
+                    .scheme(oAuth2WebAuthenticationDetails.getScheme())
+                    .host(oAuth2WebAuthenticationDetails.getHost())
+                    .port(oAuth2WebAuthenticationDetails.getPort())
+                    .build();
+        } else {
+            redirectUri = oAuth2ServiceProperties.getRedirectUri();
+        }
+
+        return redirectUri;
     }
 
     public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {

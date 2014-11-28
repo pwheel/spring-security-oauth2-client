@@ -1,11 +1,13 @@
 package com.racquettrack.security.oauth;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -47,7 +49,7 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
                 .append("&")
                 .append(oAuth2ServiceProperties.getRedirectUriParamName())
                 .append("=")
-                .append(oAuth2ServiceProperties.getAbsoluteRedirectUri(request))
+                .append(redirectUriUsing(request).toString())
                 .append("&")
                 .append(oAuth2ServiceProperties.getResponseTypeParamName())
                 .append("=")
@@ -92,6 +94,30 @@ public class OAuth2AuthenticationEntryPoint implements AuthenticationEntryPoint,
         }
 
         return result;
+    }
+
+    /**
+     * Returns the absolute redirect URI, using the {@link HttpServletRequest} to generate the absolute URL
+     * if the configured URL is not absolute.
+     * @param request
+     * @return
+     */
+    private URI redirectUriUsing(HttpServletRequest request) {
+        URI redirect;
+
+        URI redirectUri = oAuth2ServiceProperties.getRedirectUri();
+        if (!redirectUri.isAbsolute()) {
+            redirect = UriBuilder.fromPath(request.getContextPath())
+                    .path(redirectUri.toString())
+                    .scheme(request.getScheme())
+                    .host(request.getServerName())
+                    .port(request.getServerPort())
+                    .build();
+        } else {
+            redirect = redirectUri;
+        }
+
+            return redirect;
     }
 
     /**
