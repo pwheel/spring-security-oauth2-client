@@ -4,17 +4,10 @@
     <groupId>com.racquettrack</groupId>
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
+    <description>An OAuth2 Client implementation for web applications using Spring Security</description>
     <version>1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
-
-    <scm>
-        <connection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</connection>
-        <url>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</url>
-        <developerConnection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -233,4 +226,27 @@
       <url>https://raw.github.com/synergian/wagon-git/releases</url>
     </pluginRepository>
   </pluginRepositories>
+
+  <scm>
+    <connection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</connection>
+    <url>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</url>
+    <developerConnection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Paul Wheeler</name>
+      <email>paul.william.wheeler@gmail.com</email>
+      <organization>RacquetTrack Ltd</organization>
+      <organizationUrl>http://racquettrack.com</organizationUrl>
+    </developer>
+  </developers>
 </project>
