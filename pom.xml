@@ -5,7 +5,7 @@
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
     <description>An OAuth2 Client implementation for web applications using Spring Security</description>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
 
@@ -287,7 +287,7 @@
     <connection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</connection>
     <url>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</url>
     <developerConnection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</developerConnection>
-    <tag>spring-security-oauth2-client-1.4</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <licenses>
