@@ -1,5 +1,13 @@
 package com.racquettrack.security.oauth;
 
+import java.io.IOException;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -8,13 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.util.Assert;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * An implementation of a {@link AbstractAuthenticationProcessingFilter} that responds to responses from the OAuth
@@ -166,7 +167,7 @@ public class OAuth2AuthenticationFilter extends AbstractAuthenticationProcessing
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         Assert.notNull(oAuth2ServiceProperties);
-        Assert.isTrue(oAuth2ServiceProperties.getRedirectUri().endsWith(super.getFilterProcessesUrl()),
+        Assert.isTrue(oAuth2ServiceProperties.getRedirectUri().toString().endsWith(super.getFilterProcessesUrl()),
                 "The filter must be configured to be listening on the redirect_uri in OAuth2ServiceProperties");
     }
 }

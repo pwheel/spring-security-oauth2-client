@@ -1,7 +1,15 @@
 package com.racquettrack.security.oauth;
 
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+import java.util.Collections;
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -9,13 +17,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
 
 /**
  * Tests for {@link DefaultOAuth2UserInfoProvider}.
@@ -100,5 +103,15 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
 
         // then
         assertThat(userInfo, nullValue());
+    }
+
+    @Test
+    public void shouldIncludeOptionalInfoParams() {
+        Map<String,String> additionalInfoParams = Collections.singletonMap("extra_param", "param_value");
+        given(oAuth2ServiceProperties.getAdditionalInfoParams()).willReturn(additionalInfoParams);
+
+        Map<String, Object> userInfo = defaultOAuth2UserInfoProvider.getUserInfoFromProvider(token);
+        assertThat(userInfo, notNullValue());
+        verify(webResource).queryParam("extra_param", "param_value");
     }
 }

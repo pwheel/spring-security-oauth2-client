@@ -1,5 +1,18 @@
 package com.racquettrack.security.oauth;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -11,16 +24,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
 /**
  * Tests for the {@link OAuth2AuthenticationFilterTest} class.
  *
@@ -31,11 +34,13 @@ public class OAuth2AuthenticationFilterTest {
     private static final String MOCK_STATE_VALUE ="123456789a";
     private static final String MOCK_CODE_VALUE = "987654321a";
     private static final String MOCK_TOKEN_VALUE ="FOO-TOKEN";
+    private static final String MOCK_REDIRECT = "http://example.com/mock/redirect";
+
     private OAuth2AuthenticationFilter filter = new OAuth2AuthenticationFilter("/some/url");
     private static final String mockUri = "/some/url";
     private static final String mockQueryString = "state=" + MOCK_STATE_VALUE + "&code=" + MOCK_CODE_VALUE;
 
-    private OAuth2ServiceProperties oAuth2ServiceProperties = new OAuth2ServiceProperties();
+    private OAuth2ServiceProperties mockoAuth2ServiceProperties = Mockito.mock(OAuth2ServiceProperties.class);
 
     private HttpSession httpSession = Mockito.mock(HttpSession.class);
     private HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
@@ -43,10 +48,12 @@ public class OAuth2AuthenticationFilterTest {
     private AuthenticationDetailsSource<HttpServletRequest,?> authenticationDetailsSource = new WebAuthenticationDetailsSource();
     private Map<String, String[]> parameters = new HashMap<>();
     private OAuth2AuthenticationToken expectedAuthRequest = new OAuth2AuthenticationToken(MOCK_CODE_VALUE);
+    private URI mockRedirectUri;
 
     @Before
-    public void setup() {
-        filter.setoAuth2ServiceProperties(oAuth2ServiceProperties);
+    public void setup() throws URISyntaxException {
+        mockRedirectUri = new URI(MOCK_REDIRECT);
+        filter.setoAuth2ServiceProperties(mockoAuth2ServiceProperties);
         filter.setAuthenticationManager(authenticationManager);
 
         parameters.put("state", new String[] {MOCK_STATE_VALUE});
@@ -56,7 +63,9 @@ public class OAuth2AuthenticationFilterTest {
         Mockito.when(httpServletRequest.getParameterMap()).thenReturn(parameters);
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn(mockUri);
         Mockito.when(httpServletRequest.getQueryString()).thenReturn(mockQueryString);
-
+        Mockito.when(mockoAuth2ServiceProperties.getRedirectUri()).thenReturn(mockRedirectUri);
+        Mockito.when(mockoAuth2ServiceProperties.getStateParamName()).thenReturn(new OAuth2ServiceProperties().getStateParamName());
+        Mockito.when(mockoAuth2ServiceProperties.getCodeParamName()).thenReturn(new OAuth2ServiceProperties().getCodeParamName());
         Mockito.when(httpSession.getAttribute("state")).thenReturn(MOCK_STATE_VALUE);
 
         expectedAuthRequest.setDetails(authenticationDetailsSource.buildDetails(httpServletRequest));

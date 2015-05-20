@@ -1,9 +1,11 @@
 package com.racquettrack.security.oauth;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-
-import java.util.Map;
 
 /**
  * Contains configuration properties for the OAuth2 Service Provider to authenticate against.
@@ -32,11 +34,12 @@ public class OAuth2ServiceProperties implements InitializingBean {
     // Mandatory properties
     private String userAuthorisationUri = null;
     private Map<String, String> additionalAuthParams = null;
-    private String redirectUri = null;
+    private URI redirectUri = null;
     private String accessTokenUri = null;
     private String clientId = null;
     private String clientSecret = null;
     private String userInfoUri = null;
+    private Map<String, String> additionalInfoParams = null;
 
     // Optional properties
     private String accessTokenName = DEFAULT_ACCESS_TOKEN_NAME;
@@ -83,12 +86,22 @@ public class OAuth2ServiceProperties implements InitializingBean {
         this.additionalAuthParams = additionalAuthParams;
     }
 
-    public String getRedirectUri() {
+    /**
+     * The redirectUri which will handle responses from the OAuth2 provider.
+     * Can be relative or absolute
+     * @return The redirect {@link URI}
+     */
+    public URI getRedirectUri() {
         return redirectUri;
     }
 
-    public void setRedirectUri(String redirectUri) {
-        this.redirectUri = redirectUri;
+    /**
+     * The redirectUri which will handle responses from the OAuth2 provider.
+     * Can be relative or absolute
+     * @param redirectUri The redirect URI as a string; will be converted to a {@link URI}
+     */
+    public void setRedirectUri(String redirectUri) throws URISyntaxException {
+        this.redirectUri = new URI(redirectUri);
     }
 
     public String getAccessTokenUri() {
@@ -177,6 +190,14 @@ public class OAuth2ServiceProperties implements InitializingBean {
 
     public void setUserInfoUri(String userInfoUri) {
         this.userInfoUri = userInfoUri;
+    }
+
+    public Map<String, String> getAdditionalInfoParams() {
+        return additionalInfoParams;
+    }
+
+    public void setAdditionalInfoParams(Map<String, String> additionalInfoParams) {
+        this.additionalInfoParams = additionalInfoParams;
     }
 
     public String getUserIdName() {

@@ -1,6 +1,13 @@
 package com.racquettrack.security.oauth;
 
-import com.sun.jersey.api.client.*;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -17,9 +24,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.util.Assert;
 
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.Map;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Processes an OAuth2 authentication request. The request will typically originate from a
@@ -182,14 +192,19 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
     private ClientResponse getClientResponseForAccessTokenRequestFrom(Authentication authentication) {
         Client client = getClient();
 
-        WebResource webResource = client
-                .resource(oAuth2ServiceProperties.getAccessTokenUri())
-                .queryParam(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType())
-                .queryParam(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret())
-                .queryParam(oAuth2ServiceProperties.getCodeParamName(), (String) authentication.getCredentials());
+        MultivaluedMap<String, String> values = new MultivaluedMapImpl();
+        values.add(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType());
+        values.add(oAuth2ServiceProperties.getClientIdParamName(), oAuth2ServiceProperties.getClientId());
+        values.add(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret());
+        values.add(oAuth2ServiceProperties.getCodeParamName(), (String)  authentication.getCredentials());
+        URI redirectUri = redirectUriUsing(authentication);
+        values.add(oAuth2ServiceProperties.getRedirectUriParamName(), redirectUri.toString());
 
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(ClientResponse.class);
+        WebResource webResource = client.resource(oAuth2ServiceProperties.getAccessTokenUri());
+        ClientResponse clientResponse = webResource
+                .accept(MediaType.APPLICATION_JSON_TYPE)
+                .type(MediaType.APPLICATION_FORM_URLENCODED)
+                .post(ClientResponse.class, values);
 
         return clientResponse;
     }
@@ -214,6 +229,33 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         }
 
         return userInfo;
+    }
+
+    /**
+     * If a dynamic scheme, host, port, and context path was set then use it to generate the redirect URI.
+     * Uses the details on the {@link OAuth2WebAuthenticationDetails} combined with
+     * {@link OAuth2ServiceProperties#getRedirectUri()}.
+     * @param authentication    The {@link Authentication} token.
+     * @return  The dynamic redirect URI, or {@code null} if one could not be obtained.
+     */
+    private URI redirectUriUsing(Authentication authentication) {
+        URI redirectUri;
+
+        Object details = authentication.getDetails();
+        if (details != null && OAuth2WebAuthenticationDetails.class.isAssignableFrom(details.getClass())
+                && !oAuth2ServiceProperties.getRedirectUri().isAbsolute()) {
+            OAuth2WebAuthenticationDetails oAuth2WebAuthenticationDetails = (OAuth2WebAuthenticationDetails) details;
+            redirectUri = UriBuilder.fromPath(oAuth2WebAuthenticationDetails.getContextPath())
+                    .path(oAuth2ServiceProperties.getRedirectUri().toString())
+                    .scheme(oAuth2WebAuthenticationDetails.getScheme())
+                    .host(oAuth2WebAuthenticationDetails.getHost())
+                    .port(oAuth2WebAuthenticationDetails.getPort())
+                    .build();
+        } else {
+            redirectUri = oAuth2ServiceProperties.getRedirectUri();
+        }
+
+        return redirectUri;
     }
 
     public void setoAuth2ServiceProperties(OAuth2ServiceProperties oAuth2ServiceProperties) {

@@ -1,27 +1,28 @@
 package com.racquettrack.security.oauth;
 
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * Interface that allows for retrieving a {@link UserDetails} object from the internal system and for creating
  * the representation of the user in the internal system if it doesn't exist.
  *
- * @param <T> The concrete type that implements {@link UserDetails}.
+ * @param <U> The concrete type that implements {@link UserDetails}.
+ * @param <I> The type of the id field being used by the implementation, e.g. {@link UUID} or {@link String}.
  * @see OAuth2UserDetailsService
  *
  * @author paul.wheeler
  */
-public interface OAuth2UserDetailsLoader<T extends UserDetails> {
+public interface OAuth2UserDetailsLoader<U extends UserDetails, I> {
 
     /**
      * Retrieves the {@link UserDetails} object.
-     * @param uuid The {@link UUID} of the user in the OAuth Provider's system.
+     * @param id The ID of the user in the OAuth Provider's system.
      * @return The {@link UserDetails} of the user if it exists, or null if it doesn't.
      */
-    public T getUserByUserId(UUID uuid);
+    public U getUserByUserId(I id);
 
     /**
      * Expected to be called only when the user described by {@param userInfo} has already been determined to not
@@ -40,12 +41,12 @@ public interface OAuth2UserDetailsLoader<T extends UserDetails> {
      * @param userInfo The user info object returned from the OAuth Provider.
      * @return The created {@link UserDetails} object.
      */
-    public UserDetails createUser(UUID id, Map<String, Object> userInfo);
+    public U createUser(I id, Map<String, Object> userInfo);
 
     /**
      * Update the user with the information from the external system.
      * @param userDetails The {@link org.springframework.security.core.userdetails.UserDetails} object.
      * @param userInfo The user info object returned from the OAuth Provider.
      */
-    public UserDetails updateUser(UserDetails userDetails, Map<String, Object> userInfo);
+    public U updateUser(U userDetails, Map<String, Object> userInfo);
 }
