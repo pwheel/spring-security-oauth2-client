@@ -1,6 +1,7 @@
 spring-security-oauth2-client
 =============================
 
+[![Build Status](https://travis-ci.org/pwheel/spring-security-oauth2-client.svg)](https://travis-ci.org/pwheel/spring-security-oauth2-client)
 [![Join the chat at https://gitter.im/pwheel/spring-security-oauth2-client](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pwheel/spring-security-oauth2-client?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 An OAuth2 client implementation for Spring Security that allows you to use an OAuth2 Provider (such as DailyCred) directly as an Authentication Provider.
