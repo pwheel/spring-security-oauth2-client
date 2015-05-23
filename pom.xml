@@ -5,7 +5,7 @@
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
     <description>An OAuth2 Client implementation for web applications using Spring Security</description>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
 
@@ -279,7 +279,7 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy nexus-staging:release</goals>
+                    <goals>deploy</goals>
                 </configuration>
             </plugin>
         </plugins>
