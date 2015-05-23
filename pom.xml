@@ -271,6 +271,16 @@
               <autoReleaseAfterClose>true</autoReleaseAfterClose>
             </configuration>
           </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy nexus-staging:release</goals>
+                </configuration>
+            </plugin>
         </plugins>
           <pluginManagement>
               <plugins>
@@ -280,9 +290,6 @@
                       <version>2.5.1</version>
                       <configuration>
                           <autoVersionSubmodules>true</autoVersionSubmodules>
-                          <useReleaseProfile>false</useReleaseProfile>
-                          <releaseProfiles>release</releaseProfiles>
-                          <goals>deploy nexus-staging:release</goals>
                       </configuration>
                   </plugin>
               </plugins>
