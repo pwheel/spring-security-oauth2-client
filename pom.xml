@@ -299,9 +299,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</connection>
-    <url>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</url>
-    <developerConnection>scm:git:https://github.com/pwheel/spring-security-oauth2-client.git</developerConnection>
+    <connection>scm:git:git@github.com:pwheel/spring-security-oauth2-client.git</connection>
+    <url>scm:git:git@github.com:pwheel/spring-security-oauth2-client.git</url>
+    <developerConnection>scm:git:git@github.com:pwheel/spring-security-oauth2-client.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
