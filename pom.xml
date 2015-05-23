@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.spring-security>3.2.4.RELEASE</version.spring-security>
-        <version.spring>3.2.10.RELEASE</version.spring>
+        <version.spring>4.1.4.RELEASE</version.spring>
         <version.javaJDK>1.7</version.javaJDK>
         <version.jersey>1.14</version.jersey>
         <version.commons-lang3>3.1</version.commons-lang3>
@@ -177,6 +177,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
                 <executions>
                   <execution>
                     <id>attach-sources</id>
@@ -273,7 +274,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-release-plugin</artifactId>
-            <version>2.5</version>
+            <version>2.5.2</version>
             <configuration>
               <autoVersionSubmodules>true</autoVersionSubmodules>
               <useReleaseProfile>false</useReleaseProfile>
