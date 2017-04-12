@@ -1,15 +1,13 @@
 package com.racquettrack.security.oauth;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -24,12 +22,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.util.Assert;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
 
 /**
  * Processes an OAuth2 authentication request. The request will typically originate from a
@@ -56,7 +54,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
 
     private AuthenticationUserDetailsService<OAuth2AuthenticationToken> authenticatedUserDetailsService = null;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
-    boolean throwExceptionWhenTokenRejected = false;
+    private boolean throwExceptionWhenTokenRejected = false;
     private OAuth2ServiceProperties oAuth2ServiceProperties = null;
     private Client client = null;
 
@@ -159,7 +157,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
      * @return The OAuth2 token from the OAuth Provider.
      */
     protected String getAccessToken(Authentication authentication) {
-        String accessToken = null;
+        String accessToken;
 
         try {
             ClientResponse clientResponse = getClientResponseForAccessTokenRequestFrom(authentication);
@@ -201,12 +199,10 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         values.add(oAuth2ServiceProperties.getRedirectUriParamName(), redirectUri.toString());
 
         WebResource webResource = client.resource(oAuth2ServiceProperties.getAccessTokenUri());
-        ClientResponse clientResponse = webResource
+        return webResource
                 .accept(MediaType.APPLICATION_JSON_TYPE)
                 .type(MediaType.APPLICATION_FORM_URLENCODED)
                 .post(ClientResponse.class, values);
-
-        return clientResponse;
     }
 
     private boolean isOkay(ClientResponse clientResponse) {

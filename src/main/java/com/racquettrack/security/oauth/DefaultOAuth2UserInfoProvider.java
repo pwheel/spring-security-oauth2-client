@@ -1,23 +1,21 @@
 package com.racquettrack.security.oauth;
 
-import java.io.IOException;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.Assert;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * A default implementation of {@link OAuth2UserInfoProvider} that obtains a {@link Map} of properties
@@ -78,10 +76,8 @@ public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, In
             }
         }
 
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON_TYPE)
+        return webResource.accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(ClientResponse.class);
-
-        return clientResponse;
     }
 
     private String getStringRepresentationFrom(ClientResponse clientResponse) {
