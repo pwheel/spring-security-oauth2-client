@@ -1,9 +1,9 @@
 package com.racquettrack.security.oauth;
 
-import java.util.Collection;
-
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
 
 /**
  * Implementation of an {@link AbstractAuthenticationToken}. This will typically be created by a
@@ -30,7 +30,7 @@ public class OAuth2AuthenticationToken extends AbstractAuthenticationToken {
      * Instantiates an {@link OAuth2AuthenticationToken} with just a {@link #credential}. This constructor
      * would typically be used by a {@link OAuth2AuthenticationFilter}, as the {@link #principal} is not yet known. The
      * {@link AbstractAuthenticationToken} is considered not authenticated.
-     * @param credential
+     * @param credential The credential object
      */
     public OAuth2AuthenticationToken(Object credential) {
         super(null);
@@ -63,7 +63,7 @@ public class OAuth2AuthenticationToken extends AbstractAuthenticationToken {
      * The identity of the principal being authenticated. In the case of an authentication request with username and
      * password, this would be the username. Callers are expected to populate the principal for an authentication
      * request.
-     * <p/>
+     * <p>
      * The <tt>AuthenticationManager</tt> implementation will often return an <tt>Authentication</tt> containing
      * richer information as the principal for use by the application. Many of the authentication providers will
      * create a {@code UserDetails} object as the principal.

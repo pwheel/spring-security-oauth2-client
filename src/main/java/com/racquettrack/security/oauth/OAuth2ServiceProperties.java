@@ -1,11 +1,11 @@
 package com.racquettrack.security.oauth;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 /**
  * Contains configuration properties for the OAuth2 Service Provider to authenticate against.
@@ -99,6 +99,7 @@ public class OAuth2ServiceProperties implements InitializingBean {
      * The redirectUri which will handle responses from the OAuth2 provider.
      * Can be relative or absolute
      * @param redirectUri The redirect URI as a string; will be converted to a {@link URI}
+     * @throws URISyntaxException if the string is an invalid URI.
      */
     public void setRedirectUri(String redirectUri) throws URISyntaxException {
         this.redirectUri = new URI(redirectUri);

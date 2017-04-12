@@ -135,6 +135,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
      * If true, causes the provider to throw a BadCredentialsException if the presented authentication
      * request is invalid (contains a null principal or credentials). Otherwise it will just return
      * null. Defaults to false.
+     * @param throwExceptionWhenTokenRejected True to throw an exception if the token is rejected.
      */
     public void setThrowExceptionWhenTokenRejected(boolean throwExceptionWhenTokenRejected) {
         this.throwExceptionWhenTokenRejected = throwExceptionWhenTokenRejected;
