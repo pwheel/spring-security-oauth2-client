@@ -1,15 +1,5 @@
 package com.racquettrack.security.oauth;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-
-import java.util.Collections;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -17,8 +7,19 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
 
 /**
  * Tests for {@link DefaultOAuth2UserInfoProvider}.
@@ -38,7 +39,6 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
     private static final String MOCK_USER_INFO_ERROR_RESPONSE = "{\"error\": " +
             "{\"message\": \"Invalid OAuth access token.\",\"code\": 190,\"type\": \"OAuthException\"}," +
             "\"worked\": false}";
-    private static final String MOCK_BAD_USER_INFO_RESPONSE = "bob bob bob bob";
     @Mock
     private Authentication token;
     @Mock
@@ -47,7 +47,7 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
     private DefaultOAuth2UserInfoProvider defaultOAuth2UserInfoProvider;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         initMocks(MOCK_USER_INFO_URI, MOCK_USER_INFO_RESPONSE);
 
@@ -65,26 +65,14 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
 
         // then
         assertThat(userInfo, notNullValue());
-        assertThat((String)userInfo.get("display"), is("paul.wheeler@racquettrack.com"));
+        assertThat(userInfo.get("display"), is("paul.wheeler@racquettrack.com"));
     }
 
     @Test
     public void shouldReturnNullWhenProviderReturnsAnError() {
         // given
-        given(clientResponse.getEntity(String.class)).willReturn(MOCK_USER_INFO_ERROR_RESPONSE);
-        given(clientResponse.getClientResponseStatus()).willReturn(ClientResponse.Status.BAD_REQUEST);
-
-        // when
-        Map<String, Object> userInfo = defaultOAuth2UserInfoProvider.getUserInfoFromProvider(token);
-
-        // then
-        assertThat(userInfo, nullValue());
-    }
-
-    @Test
-    public void shouldReturnNullWhenJacksonMappingFails() {
-        // given
-        given(clientResponse.getEntity(String.class)).willReturn(MOCK_BAD_USER_INFO_RESPONSE);
+        given(response.readEntity(String.class)).willReturn(MOCK_USER_INFO_ERROR_RESPONSE);
+        given(response.getStatusInfo()).willReturn(Response.Status.BAD_REQUEST);
 
         // when
         Map<String, Object> userInfo = defaultOAuth2UserInfoProvider.getUserInfoFromProvider(token);
@@ -96,7 +84,7 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
     @Test
     public void shouldReturnNullWhenJerseyThrowsARuntimeError() {
         // given
-        given(builder.get(ClientResponse.class)).willThrow(ClientHandlerException.class);
+        given(builder.get()).willThrow(ProcessingException.class);
 
         // when
         Map<String, Object> userInfo = defaultOAuth2UserInfoProvider.getUserInfoFromProvider(token);
@@ -112,6 +100,6 @@ public class DefaultOauth2UserInfoProviderTest extends AbstractOAuth2Test {
 
         Map<String, Object> userInfo = defaultOAuth2UserInfoProvider.getUserInfoFromProvider(token);
         assertThat(userInfo, notNullValue());
-        verify(webResource).queryParam("extra_param", "param_value");
+        verify(webTarget).queryParam("extra_param", "param_value");
     }
 }

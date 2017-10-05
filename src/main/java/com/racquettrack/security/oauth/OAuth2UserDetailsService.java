@@ -1,8 +1,5 @@
 package com.racquettrack.security.oauth;
 
-import java.util.Map;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -13,6 +10,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
 
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * An abstract implementation of an OAuth
  * {@link org.springframework.security.core.userdetails.AuthenticationUserDetailsService}. The class provides
@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
  *
  * @author paul.wheeler
  */
-public class OAuth2UserDetailsService<I> implements
+public class OAuth2UserDetailsService<I, U extends UserDetails> implements
         AuthenticationUserDetailsService, InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2UserDetailsService.class);
 
@@ -29,7 +29,7 @@ public class OAuth2UserDetailsService<I> implements
             "Invalid Configuration? If the ID type is not String you must specify an idConverter";
 
     protected OAuth2ServiceProperties oAuth2ServiceProperties = null;
-    protected OAuth2UserDetailsLoader<UserDetails, I> oAuth2UserDetailsLoader = null;
+    protected OAuth2UserDetailsLoader<U, I> oAuth2UserDetailsLoader = null;
     protected Converter<String, I> idConverter = null;
     protected OAuth2UserInfoProvider oAuth2UserInfoProvider;
     protected OAuth2PostCreatedOrEnabledUserService oAuth2PostCreatedOrEnabledUserService;
@@ -53,7 +53,7 @@ public class OAuth2UserDetailsService<I> implements
      *          token
      */
     @Override
-    public UserDetails loadUserDetails(Authentication token) throws UsernameNotFoundException {
+    public U loadUserDetails(Authentication token) throws UsernameNotFoundException {
         LOGGER.debug("loadUserDetails called with: " + token);
         Map<String, Object> userInfo = oAuth2UserInfoProvider.getUserInfoFromProvider(token);
         if (userInfo == null) {
@@ -63,7 +63,7 @@ public class OAuth2UserDetailsService<I> implements
 
         I userId = getUserId(userInfo);
 
-        UserDetails userDetails;
+        U userDetails;
         try {
             userDetails = oAuth2UserDetailsLoader.getUserByUserId(userId);
         } catch (ClassCastException e) {
@@ -142,7 +142,7 @@ public class OAuth2UserDetailsService<I> implements
         this.oAuth2ServiceProperties = oAuth2ServiceProperties;
     }
 
-    public void setoAuth2UserDetailsLoader(OAuth2UserDetailsLoader<UserDetails, I> oAuth2UserDetailsLoader) {
+    public void setoAuth2UserDetailsLoader(OAuth2UserDetailsLoader<U, I> oAuth2UserDetailsLoader) {
         this.oAuth2UserDetailsLoader = oAuth2UserDetailsLoader;
     }
 

@@ -1,18 +1,6 @@
 package com.racquettrack.security.oauth;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-import java.net.URISyntaxException;
-
-import javax.ws.rs.core.MultivaluedMap;
-
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,8 +16,22 @@ import org.springframework.security.core.userdetails.AuthenticationUserDetailsSe
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MultivaluedMap;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link OAuth2AuthenticationProvider}.
@@ -57,10 +59,10 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
     @InjectMocks
     private OAuth2AuthenticationProvider oAuth2AuthenticationProvider;
     @Captor
-    private ArgumentCaptor<MultivaluedMap<String, String>> mapArgumentCaptor;
+    private ArgumentCaptor<Entity<Form>> formEntityCaptor;
 
     @Before
-    public void setup() throws URISyntaxException {
+    public void setup() throws URISyntaxException, IOException {
         initMocks(MOCK_ACCESS_URI, MOCK_ACCESS_RESPONSE);
 
         oAuth2AuthenticationProvider.setoAuth2ServiceProperties(oAuth2ServiceProperties);
@@ -90,13 +92,15 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
 
         // then
         assertThat(authentication, notNullValue());
-        assertThat((OAuth2AuthenticationToken)authentication, is(expectedResult));
+        assertThat(authentication, is(expectedResult));
     }
 
     @Test(expected = AuthenticationException.class)
-    public void shouldThrowAuthenticationExceptionWhenAuthorizationCodeIsInvalid() {
+    public void shouldThrowAuthenticationExceptionWhenAuthorizationCodeIsInvalid() throws IOException {
         // given
-        given(clientResponse.getEntity(String.class)).willReturn(MOCK_ACCESS_RESPONSE_FAILURE);
+        TypeReference typeReference = new TypeReference<Map<String,Object>>(){};
+        Map<String, Object> responseAsMap = getObjectMapper().readValue(MOCK_ACCESS_RESPONSE_FAILURE, typeReference);
+        given(response.readEntity(new GenericType<Map<String, Object>>() {})).willReturn(responseAsMap);
 
         // when
         oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
@@ -105,16 +109,7 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
     @Test(expected = AuthenticationException.class)
     public void shouldThrowAuthenticationExceptionWhenJerseyThrowsARuntimeError() {
         // given
-        given(builder.post(eq(ClientResponse.class), anyObject())).willThrow(ClientHandlerException.class);
-
-        // when
-        oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
-    }
-
-    @Test(expected = AuthenticationException.class)
-    public void shouldThrowAuthenticationExceptionWhenMappingFails() {
-        // given
-        given(clientResponse.getEntity(String.class)).willReturn("bob bob bob");
+        given(builder.post(anyObject())).willThrow(ProcessingException.class);
 
         // when
         oAuth2AuthenticationProvider.authenticate(oAuth2AuthenticationToken);
@@ -132,8 +127,8 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
         oAuth2AuthenticationProvider.authenticate(authTokenWithDetails);
 
         // then
-        verify(builder).post(eq(ClientResponse.class), mapArgumentCaptor.capture());
-        MultivaluedMap<String, String> values = mapArgumentCaptor.getValue();
+        verify(builder).post(formEntityCaptor.capture());
+        MultivaluedMap<String, String> values = formEntityCaptor.getValue().getEntity().asMap();
         assertThat(values.getFirst(PARAM_REDIRECT_URI), is("https://host.com:443/path/callback"));
     }
 
@@ -148,8 +143,8 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
         oAuth2AuthenticationProvider.authenticate(authTokenWithWebDetails);
 
         // then
-        verify(builder).post(eq(ClientResponse.class), mapArgumentCaptor.capture());
-        MultivaluedMap<String, String> values = mapArgumentCaptor.getValue();
+        verify(builder).post(formEntityCaptor.capture());
+        MultivaluedMap<String, String> values = formEntityCaptor.getValue().getEntity().asMap();
         assertThat(values.getFirst(PARAM_REDIRECT_URI), is(REDIRECT_URI));
     }
 
@@ -164,8 +159,8 @@ public class OAuth2AuthenticationProviderTest extends AbstractOAuth2Test {
         oAuth2AuthenticationProvider.authenticate(authTokenWithDetails);
 
         // then
-        verify(builder).post(eq(ClientResponse.class), mapArgumentCaptor.capture());
-        MultivaluedMap<String, String> values = mapArgumentCaptor.getValue();
+        verify(builder).post(formEntityCaptor.capture());
+        MultivaluedMap<String, String> values = formEntityCaptor.getValue().getEntity().asMap();
         assertThat(values.getFirst(PARAM_REDIRECT_URI), is("https://localhost:443/app/callback"));
     }
 

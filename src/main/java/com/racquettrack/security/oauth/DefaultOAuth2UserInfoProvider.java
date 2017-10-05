@@ -1,20 +1,19 @@
 package com.racquettrack.security.oauth;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.Assert;
 
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 /**
@@ -26,7 +25,6 @@ import java.util.Map;
  */
 public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOAuth2UserInfoProvider.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private Client client =  null;
     private OAuth2ServiceProperties oAuth2ServiceProperties;
@@ -36,17 +34,15 @@ public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, In
         Map<String,Object> userInfo = null;
 
         try {
-            ClientResponse clientResponse = getClientResponseFromProviderUsing(token);
+            Response response = getResponseFromProviderUsing(token);
 
-            String output = getStringRepresentationFrom(clientResponse);
-            LOGGER.debug("Output is {}", output);
-
-            if (isOkay(clientResponse)) {
-                userInfo = getUserInfoMapFrom(output);
+            if (isOkay(response)) {
+                userInfo = getUserInfoMapFrom(response);
             } else {
-                LOGGER.error("Got error response (code={}) from Provider: {}", clientResponse.getStatus(), output);
+                LOGGER.error("Got error response (code={}) from Provider, output={}", response.getStatus(),
+                        response.readEntity(String.class));
             }
-        } catch (UniformInterfaceException | ClientHandlerException e) {
+        } catch (WebApplicationException | ProcessingException e) {
             LOGGER.error("Jersey client threw a runtime exception", e);
         }
 
@@ -59,46 +55,33 @@ public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, In
     }
 
     /**
-     * Calls the external OAuth provider and returns the Jersey {@link ClientResponse} object.
+     * Calls the external OAuth provider and returns the Jersey {@link Response} object.
      * @param token The {@link Authentication} token to use in the call.
-     * @return The {@link ClientResponse} object.
+     * @return The {@link Response} object.
      */
-    private ClientResponse getClientResponseFromProviderUsing(Authentication token) {
+    private Response getResponseFromProviderUsing(Authentication token) {
         Client client = getClient();
 
-        WebResource webResource = client
-                .resource(oAuth2ServiceProperties.getUserInfoUri())
+        WebTarget webTarget = client
+                .target(oAuth2ServiceProperties.getUserInfoUri())
                 .queryParam(oAuth2ServiceProperties.getAccessTokenName(), (String)token.getCredentials());
 
         if (oAuth2ServiceProperties.getAdditionalInfoParams() != null) {
             for (Map.Entry<String, String> entry : oAuth2ServiceProperties.getAdditionalInfoParams().entrySet()) {
-                webResource = webResource.queryParam(entry.getKey(), entry.getValue());
+                webTarget = webTarget.queryParam(entry.getKey(), entry.getValue());
             }
         }
 
-        return webResource.accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(ClientResponse.class);
+        return webTarget.request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
     }
 
-    private String getStringRepresentationFrom(ClientResponse clientResponse) {
-        return clientResponse.getEntity(String.class);
+    private Map<String, Object> getUserInfoMapFrom(Response response) {
+        return response.readEntity(new GenericType<Map<String, Object>>() {});
     }
 
-    private Map<String, Object> getUserInfoMapFrom(String string) {
-        Map<String, Object> userInfo = null;
-
-        try {
-            TypeReference typeReference = new TypeReference<Map<String,Object>>(){};
-            userInfo = OBJECT_MAPPER.readValue(string, typeReference);
-        } catch (IOException e) {
-            LOGGER.error("Error getting user info from Provider", e);
-        }
-
-        return userInfo;
-    }
-
-    private boolean isOkay(ClientResponse clientResponse) {
-        return clientResponse != null && clientResponse.getClientResponseStatus() == ClientResponse.Status.OK;
+    private boolean isOkay(Response response) {
+        return response != null && response.getStatusInfo().equals(Response.Status.OK);
     }
 
     /**
@@ -107,7 +90,7 @@ public class DefaultOAuth2UserInfoProvider implements OAuth2UserInfoProvider, In
      */
     protected Client getClient() {
         if (client == null) {
-            client = Client.create();
+            client = ClientBuilder.newClient();
         }
         return client;
     }

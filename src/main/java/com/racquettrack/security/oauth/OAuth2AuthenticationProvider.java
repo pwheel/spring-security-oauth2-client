@@ -1,13 +1,5 @@
 package com.racquettrack.security.oauth;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -22,10 +14,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.util.Assert;
 
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
@@ -49,8 +49,6 @@ import java.util.Map;
  */
 public class OAuth2AuthenticationProvider implements AuthenticationProvider, InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2AuthenticationProvider.class);
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private AuthenticationUserDetailsService<OAuth2AuthenticationToken> authenticatedUserDetailsService = null;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
@@ -161,26 +159,25 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         String accessToken;
 
         try {
-            ClientResponse clientResponse = getClientResponseForAccessTokenRequestFrom(authentication);
+            Response response = getResponseForAccessTokenRequestFrom(authentication);
 
-            if (!isOkay(clientResponse)) {
+            if (!isOkay(response)) {
                 throw new AuthenticationServiceException("Got HTTP error code from OAuth2 provider: "
-                        + clientResponse.getStatus());
+                        + response.getStatus());
             }
 
-            String output = getStringRepresentationFrom(clientResponse);
-            LOGGER.debug("Output is {}", output);
-
-            Map<String,Object> userData = getUserDataMapFrom(output);
+            Map<String,Object> userData = getUserDataMapFrom(response);
             // Check to see if there was an error or not
             if (userData.containsKey("error")) {
-                LOGGER.error("Got error response from the OAuth Provider: {}", output);
-                throw new AuthenticationServiceException("Credentials were rejected by the OAuth Provider: " + output);
+                String output = response.readEntity(String.class);
+                LOGGER.error("Got error response from the OAuth Provider, output={}",
+                        output);
+                throw new AuthenticationServiceException("Credentials were rejected by the OAuth Provider, output=" + output);
             }
 
             accessToken = (String)userData.get(oAuth2ServiceProperties.getAccessTokenName());
 
-        } catch (UniformInterfaceException | ClientHandlerException e) {
+        } catch (WebApplicationException | ProcessingException e) {
             LOGGER.error("Error thrown by Jersey client when exchanging code for token", e);
             throw new AuthenticationServiceException("Error thrown by Jersey client when exchanging code for token", e);
         }
@@ -188,10 +185,10 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         return accessToken;
     }
 
-    private ClientResponse getClientResponseForAccessTokenRequestFrom(Authentication authentication) {
+    private Response getResponseForAccessTokenRequestFrom(Authentication authentication) {
         Client client = getClient();
 
-        MultivaluedMap<String, String> values = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> values = new MultivaluedHashMap<>();
         values.add(oAuth2ServiceProperties.getGrantTypeParamName(), oAuth2ServiceProperties.getGrantType());
         values.add(oAuth2ServiceProperties.getClientIdParamName(), oAuth2ServiceProperties.getClientId());
         values.add(oAuth2ServiceProperties.getClientSecretParamName(), oAuth2ServiceProperties.getClientSecret());
@@ -199,33 +196,18 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
         URI redirectUri = redirectUriUsing(authentication);
         values.add(oAuth2ServiceProperties.getRedirectUriParamName(), redirectUri.toString());
 
-        WebResource webResource = client.resource(oAuth2ServiceProperties.getAccessTokenUri());
-        return webResource
-                .accept(MediaType.APPLICATION_JSON_TYPE)
-                .type(MediaType.APPLICATION_FORM_URLENCODED)
-                .post(ClientResponse.class, values);
+        WebTarget webTarget = client.target(oAuth2ServiceProperties.getAccessTokenUri());
+        return webTarget
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.form(values));
     }
 
-    private boolean isOkay(ClientResponse clientResponse) {
-        return clientResponse != null && clientResponse.getClientResponseStatus() == ClientResponse.Status.OK;
+    private boolean isOkay(Response response) {
+        return response != null && response.getStatusInfo() == Response.Status.OK;
     }
 
-    private String getStringRepresentationFrom(ClientResponse clientResponse) {
-        return clientResponse.getEntity(String.class);
-    }
-
-    private Map<String, Object> getUserDataMapFrom(String string) throws AuthenticationServiceException {
-        Map<String, Object> userInfo;
-
-        try {
-            TypeReference typeReference = new TypeReference<Map<String,Object>>(){};
-            userInfo = OBJECT_MAPPER.readValue(string, typeReference);
-        } catch (IOException e) {
-            LOGGER.error("Error getting user data from Provider", e);
-            throw new AuthenticationServiceException("Error getting user data from Provider", e);
-        }
-
-        return userInfo;
+    private Map<String, Object> getUserDataMapFrom(Response response) throws AuthenticationServiceException {
+        return response.readEntity(new GenericType<Map<String, Object>>() {});
     }
 
     /**
@@ -265,7 +247,7 @@ public class OAuth2AuthenticationProvider implements AuthenticationProvider, Ini
      */
     public Client getClient() {
         if (client == null) {
-            client = Client.create();
+            client = ClientBuilder.newClient();
         }
         return client;
     }

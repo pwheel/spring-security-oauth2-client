@@ -12,9 +12,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.spring-security>3.2.4.RELEASE</version.spring-security>
-        <version.spring>4.1.4.RELEASE</version.spring>
-        <version.javaJDK>1.7</version.javaJDK>
-        <version.jersey>1.14</version.jersey>
+        <version.spring>4.3.4.RELEASE</version.spring>
+        <version.javaJDK>1.8</version.javaJDK>
+        <version.jersey2>2.26</version.jersey2>
+        <jaxrs.version>2.1</jaxrs.version>
         <version.commons-lang3>3.1</version.commons-lang3>
         <version.jackson2>2.6.6</version.jackson2>
         <slf4j.version>1.7.6</slf4j.version>
@@ -36,62 +37,27 @@
 
         <!-- Jersey Dependencies -->
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${version.jersey}</version>
+          <groupId>javax.ws.rs</groupId>
+          <artifactId>javax.ws.rs-api</artifactId>
+          <version>${jaxrs.version}</version>
         </dependency>
         <dependency>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-jaxrs-json-provider</artifactId>
-          <version>${version.jackson2}</version>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jackson</artifactId>
+          <version>${version.jersey2}</version>
         </dependency>
+        <!-- End Jersey Dependencies -->
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${version.jersey}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-spring</artifactId>
-            <version>${version.jersey}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-aop</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-web</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-beans</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.jersey-test-framework</groupId>
-            <artifactId>jersey-test-framework-grizzly2</artifactId>
-            <version>${version.jersey}</version>
-            <scope>test</scope>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-client</artifactId>
+          <version>${version.jersey2}</version>
         </dependency>
         <!-- End Jersey Dependencies -->
         <dependency>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-core</artifactId>
           <version>${version.jackson2}</version>
+          <scope>test</scope>
         </dependency>
 
         <dependency>
