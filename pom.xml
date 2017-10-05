@@ -5,7 +5,7 @@
     <artifactId>spring-security-oauth2-client</artifactId>
     <name>Spring Security OAuth2 Client</name>
     <description>An OAuth2 Client implementation for web applications using Spring Security</description>
-    <version>3.0-SNAPSHOT</version>
+    <version>3.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>https://github.com/pwheel/spring-security-oauth2-client</url>
 
@@ -60,12 +60,12 @@
           <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-            <scope>provided</scope>
-        </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>3.0.1</version>
+        <scope>provided</scope>
+      </dependency>
 
         <!-- Commons lang -->
         <dependency>
